@@ -1,7 +1,7 @@
 
 // @GENERATOR:play-routes-compiler
 // @SOURCE:C:/Users/TranQuoc/framgia-play-core/conf/routes
-// @DATE:Tue Oct 03 13:19:57 ICT 2017
+// @DATE:Wed Oct 04 15:02:56 ICT 2017
 
 import play.api.mvc.Call
 

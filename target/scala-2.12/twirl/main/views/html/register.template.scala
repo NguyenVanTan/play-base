@@ -87,7 +87,7 @@ Seq[Any](format.raw/*1.4*/(""" """),_display_(/*1.6*/main("Welcome to Play")/*1.
 
               /*
                   -- GENERATED --
-                  DATE: Tue Oct 03 14:46:11 ICT 2017
+                  DATE: Wed Oct 04 15:02:56 ICT 2017
                   SOURCE: C:/Users/TranQuoc/framgia-play-core/app/views/register.scala.html
                   HASH: 3a1262ed633c47ecd7892bdc35290ceb2b68bbb3
                   MATRIX: 944->1|1040->3|1067->5|1098->28|1137->30|1167->34|2600->1437
