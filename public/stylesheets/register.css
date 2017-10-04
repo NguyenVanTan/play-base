@@ -1,0 +1,64 @@
+#signup_wrapper {
+	margin: 100px auto;
+	width: 390px;
+	height:400px;
+	background: #fff;
+	-webkit-border-radius: 5px;
+	-moz-border-radius: 5px;
+	-o-border-radius: 5px;
+	-ms-border-radius: 5px;
+	border-radius: 5px;
+	padding: 50px;
+}
+
+.forms {
+	margin-top: 20px;
+	width:500px;
+}
+.forms input {
+	border: 1px solid #d9d9d9 !important;
+	color: #003366;
+	padding: 7px 0px 7px 10px;
+	outline:none;
+    transition: all 0.25s ease-in-out;
+    -webkit-transition: all 0.25s ease-in-out;
+    -moz-transition: all 0.25s ease-in-out;
+	margin-bottom: 15px;
+}
+.forms input:focus {
+    box-shadow: 0 0 5px rgba(48, 168, 218, 1);
+    -webkit-box-shadow: 0 0 5px rgba(48, 168, 218, 1); 
+    -moz-box-shadow: 0 0 5px rgba(48, 168, 218, 1);
+    border:1px solid rgba(48, 168, 218, 1) !important; 
+}
+.forms #name {
+	background:url("https://i.imgur.com/n6engUt.png") no-repeat left center;
+	background-position: 10px 5px;
+	border-right: 1px solid #f1f1f1;
+}
+.forms #email {
+	background:url("https://i.imgur.com/xCWr97f.png") no-repeat left center;
+	background-position: 10px 10px;
+	border-right: 1px solid #f1f1f1;
+}
+.forms #password {
+	background:url("https://i.imgur.com/69UwNcl.png") no-repeat left center;
+	background-position: 10px 5px;
+	border-right: 1px solid #f1f1f1;
+}
+.forms #submit {
+	display: inline-block;
+    text-align: center;
+    vertical-align: middle;
+	width: 120px;
+	height:40px;
+	padding-top: 10px;
+    border: 0px solid #178bb6;
+    border-radius: 8px;
+    background: #3b5998;
+    font-family: 'Open Sans', sans-serif;
+	font-weight:700;
+    color: #ffffff;
+    text-decoration: none;
+	margin-top: 25px;
+}
