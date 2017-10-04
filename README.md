@@ -18,6 +18,11 @@ sbt eclipse
 
 - Open eclipse, using Import wizard to import your project
 
+# HOW TO SETUP THIS PROJECT
+- Clone the source code from github
+- Move to folder contain source code and run command: sbt eclipse
+- Open eclipse and Import a Git project.
+
 # HOW TO RUN
 - Open terminal and move to your project folder.
 - Run command: sbt run
