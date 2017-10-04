@@ -1,6 +1,0 @@
-eclipse
-cd ../
-eclipse
-sbt eclipse
-cd ../
-exit
