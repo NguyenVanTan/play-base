@@ -2,3 +2,5 @@
 /target/
 /.g8/
 /.settings
+.project
+.classpath
