@@ -8,3 +8,6 @@ lazy val root = (project in file(".")).enablePlugins(PlayJava)
 scalaVersion := "2.12.2"
 
 libraryDependencies += guice
+libraryDependencies += javaJpa
+libraryDependencies += "org.hibernate" % "hibernate-core" % "5.2.5.Final"
+libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.41"
