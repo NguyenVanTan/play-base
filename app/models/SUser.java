@@ -1,5 +1,7 @@
 package models;
 
+import play.data.validation.Constraints;
+
 import java.io.Serializable;
 import javax.persistence.*;
 import java.util.Date;
@@ -27,14 +29,18 @@ public class SUser implements Serializable {
 
 	private String description;
 
+	@Constraints.Required
+	@Constraints.Email
 	private String email;
 
 	private int gender;
 
 	private String mobile;
 
+	@Constraints.Required
 	private String name;
 
+	@Constraints.Required
 	private String password;
 
 	private int type;

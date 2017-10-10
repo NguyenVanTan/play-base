@@ -49,4 +49,6 @@ public class JPARepository implements Repository {
         List<SUser> persons = em.createQuery("select p from User p", SUser.class).getResultList();
         return persons.stream();
     }
+
+
 }

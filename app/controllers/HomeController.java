@@ -12,7 +12,7 @@ import javax.inject.Inject;
 public class HomeController extends Controller {
 
 	private final Repository repository;
-	
+
 	@Inject
     public HomeController(Repository repository) {
         this.repository = repository;
@@ -25,17 +25,6 @@ public class HomeController extends Controller {
      * <code>GET</code> request with a path of <code>/</code>.
      */
     public Result login() {
-    	SUser user = new SUser();
-    	user.setEmail("vuta0512@gmail.com");
-    	user.setPassword("123456");
-    	user.setName("vuta0512");
-    	user.setMobile("0936544434");
-    	repository.add(user);
         return ok(views.html.login.render());
     }
-    
-    public Result register() {
-        return ok(views.html.register.render());
-    }
-
 }

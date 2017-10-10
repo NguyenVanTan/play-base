@@ -1,41 +1,106 @@
-@() @main("Welcome to Play") {
+@(registerForm: Form[SUser])
+@import helper._
 
-<div id="signup_wrapper">
-	<div class="join">Sign up</div>
-	<div class="lock"></div>
-	<div class="clr"></div>
-	<div class="login-options">You need to fill out this form.</div>
-	<div class="clr"></div>
-	<div class="forms">
-		<form action="" method="get">
+@main("Register") {
+
+@helper.form(CSRF(routes.UserController.register())) {
+	<div id="signup_wrapper">
+		<div class="join">Sign up</div>
+		<div class="lock"></div>
+		<div class="clr"></div>
+		<div class="login-options">You need to fill out this form.</div>
+		<div class="clr">
+		@if(flash.containsKey("success")) {
+			<span style="color: green">@flash.get("success")</span>
+		} else {
+			<span style="color: red">@flash.get("error")</span>
+		}
+		</div>
+		<div class="forms">
 			<table>
 				<tr>
 					<td><span class="login-options">Full Name:</span></td>
-					<td><input id="name" type="text" size="30" onClick="border: 1px solid #30a8da;" /></td>
+					<td>
+                        @*<input id="name" type="text" size="30" onClick="border: 1
+					px
+					solid #30
+					a8da;" />*@
+                        @helper.inputText(registerForm("name"), '_label -> "", '_showConstraints -> false)
+                    </td>
 				</tr>
 				<tr>
 					<td><span class="login-options">Email Address:</span></td>
-					<td><input id="email" type="text" size="30" onClick="border: 1px solid #30a8da;" /></td>
+					<td>
+                        @*<input id="email" type="text" size="30" onClick="border: 1
+					px
+					solid #30
+					a8da;" />*@
+                        @helper.inputText(registerForm("email"), '_label -> "", '_showConstraints -> false)
+                    </td>
 				</tr>
 				<tr>
 					<td><span class="login-options">Password:</span></td>
-					<td><input id="password" type="password" size="30" onClick="border: 1px solid #30a8da;" /></td>
+					<td>
+                        @*<input id="password" type="password" size="30" onClick="border: 1
+					px
+					solid #30
+					a8da;" />*@
+                        @helper.inputPassword(registerForm("password"), '_label -> "", '_showConstraints -> false)
+                    </td>
 				</tr>
 				<tr>
 					<td><span class="login-options">Confirm Password:</span></td>
-					<td><input id="confirmPassword" type="password" size="30" onClick="border: 1px solid #30a8da;" /></td>
+					<td><input id="confirmPassword" name="confirmPassword" type="password" onClick="border: 1
+					px
+					solid #30
+					a8da;" /></td>
 				</tr>
 				<tr>
 					<td><span class="login-options">Phone Number:</span></td>
-					<td><input id="mobile" type="text" size="30" onClick="border: 1px solid #30a8da;" /></td>
+					<td>
+						@*<input id="mobile" type="text" size="30" onClick="border: 1
+					px
+					solid #30
+					a8da;" />*@
+						@helper.inputText(registerForm("mobile"), '_label -> "", '_showConstraints -> false)
+					</td>
+				</tr>
+				<tr>
+					<td><span class="login-options">User type:</span></td>
+					<td>
+						@select(
+							field = registerForm("type"),
+							options = Seq(
+								"1" -> "Type1",
+								"2" -> "Type2",
+								"3" -> "Type3"
+							),
+						  	'_label -> "",
+							'_default -> "Choose One"
+						)
+					</td>
+				</tr>
+				<tr>
+					<td><span class="login-options">Gender:</span></td>
+					<td>
+					@select(
+						field = registerForm("gender"),
+						options = Seq(
+							"1" -> "Male",
+							"2" -> "Female",
+							"3" -> "=))"
+						),
+						'_label -> "",
+						'_default -> "Choose One"
+					)
+					</td>
 				</tr>
 				<tr>
 					<td colspan="2" align="center"><input id="submit" type="submit" value = "Register" /></td>
 				</tr>
 			</table>
-		</form>
+		</div>
 	</div>
-</div>
-<div class="footer">Copyright by Framgia</div>
-
+	<div class="footer">Copyright by Framgia</div>
+}
 }
