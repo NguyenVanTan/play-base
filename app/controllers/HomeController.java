@@ -27,4 +27,8 @@ public class HomeController extends Controller {
     public Result login() {
         return ok(views.html.login.render());
     }
+
+    public Result management() {
+        return ok(views.html.management.render());
+    }
 }
