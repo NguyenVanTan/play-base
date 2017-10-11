@@ -16,4 +16,7 @@ public interface Repository {
     CompletionStage<SUser> add(SUser user);
 
     CompletionStage<Stream<SUser>> list();
+
+    CompletionStage<SUser> getUserByEmail(String email);
+
 }

@@ -18,6 +18,18 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 @Singleton
 public class JPARepository implements Repository {
     private JPAApi jpaApi;
+
+    @Override
+    public CompletionStage<SUser> getUserByEmail(String email) {
+        return supplyAsync(() -> wrap(em -> fetchUserByEmail(em, email)), executionContext);
+    }
+
+    private SUser fetchUserByEmail(EntityManager em, String email){
+        return em.createQuery("select p from SUser p where p.email = ?", SUser.class)
+                .setParameter(0, email)
+                .getSingleResult();
+}
+
     private DatabaseExecutionContext executionContext;
 
     @Inject
@@ -49,6 +61,5 @@ public class JPARepository implements Repository {
         List<SUser> persons = em.createQuery("select p from User p", SUser.class).getResultList();
         return persons.stream();
     }
-
 
 }
