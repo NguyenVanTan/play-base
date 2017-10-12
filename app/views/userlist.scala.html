@@ -1,0 +1,42 @@
+@(userList: List[SUser])
+
+@management("User management", "User_Control") {
+    <h2>All Users</h2>
+    <script>
+            function del(urlToDelete) {
+                $.ajax({
+                    url: urlToDelete,
+                    type: 'DELETE',
+                    success: function (results) {
+                        // Refresh the page
+                        location.reload();
+                    }
+                });
+            }
+    </script>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Mobile</th>
+                <th>Gender</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @for(user <- userList) {
+            <tr>
+                <td>@user.getName()</td>
+                <td>@user.getEmail()</td>
+                <td>@user.getMobile()</td>
+                <td>@user.getGender()</td>
+                <td>
+                    <a onclick="javascript:del('@routes.AppController.removeUser(user.getId())'">
+                        <i class="icon icon-trash"></i></a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

@@ -4,6 +4,7 @@ import com.google.inject.ImplementedBy;
 
 import models.SUser;
 
+import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.stream.Stream;
 
@@ -15,7 +16,7 @@ public interface Repository {
 
     CompletionStage<SUser> add(SUser user);
 
-    CompletionStage<Stream<SUser>> list();
+    CompletionStage<List<SUser>> getAllUser();
 
     CompletionStage<SUser> getUserByEmail(String email);
 

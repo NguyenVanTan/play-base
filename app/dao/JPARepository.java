@@ -17,7 +17,25 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 @Singleton
 public class JPARepository implements Repository {
+
     private JPAApi jpaApi;
+    private DatabaseExecutionContext executionContext;
+
+    @Inject
+    public JPARepository(JPAApi api, DatabaseExecutionContext executionContext) {
+        this.jpaApi = api;
+        this.executionContext = executionContext;
+    }
+
+    @Override
+    public CompletionStage<List<SUser>> getAllUser(){
+        return supplyAsync(() -> wrap(em -> fetchAllUser(em)), executionContext);
+    }
+
+    private List<SUser> fetchAllUser(EntityManager em){
+        return em.createQuery("select p from SUser p", SUser.class)
+                .getResultList();
+    }
 
     @Override
     public CompletionStage<SUser> getUserByEmail(String email) {
@@ -28,24 +46,11 @@ public class JPARepository implements Repository {
         return em.createQuery("select p from SUser p where p.email = ?", SUser.class)
                 .setParameter(0, email)
                 .getSingleResult();
-}
-
-    private DatabaseExecutionContext executionContext;
-
-    @Inject
-    public JPARepository(JPAApi api, DatabaseExecutionContext executionContext) {
-        this.jpaApi = api;
-        this.executionContext = executionContext;
     }
-    
+
     @Override
     public CompletionStage<SUser> add(SUser user) {
         return supplyAsync(() -> wrap(em -> insert(em, user)), executionContext);
-    }
-
-    @Override
-    public CompletionStage<Stream<SUser>> list() {
-        return supplyAsync(() -> wrap(em -> list(em)), executionContext);
     }
 
     private <T> T wrap(Function<EntityManager, T> function) {
@@ -55,11 +60,6 @@ public class JPARepository implements Repository {
     private SUser insert(EntityManager em, SUser user) {
         em.persist(user);
         return user;
-    }
-
-    private Stream<SUser> list(EntityManager em) {
-        List<SUser> persons = em.createQuery("select p from User p", SUser.class).getResultList();
-        return persons.stream();
     }
 
 }

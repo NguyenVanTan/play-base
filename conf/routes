@@ -10,6 +10,9 @@ GET     /logout                          controllers.LoginController.logout()
 
 GET     /management                      controllers.AppController.management()
 
+GET     /userlist                        controllers.AppController.userlist()
+GET     /removeUser:userId               controllers.AppController.removeUser(userId: Int)
+
 GET     /register                        controllers.UserController.newRegister()
 POST    /register                        controllers.UserController.register()
 

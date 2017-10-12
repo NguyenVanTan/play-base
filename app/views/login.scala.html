@@ -1,7 +1,7 @@
 @(loginForm: Form[Login])
 @import helper._
 
-@() @main("Sign in") {
+@main("Sign in") {
 	@helper.form(routes.LoginController.authenticate()) {
         @CSRF.formField
 		<div id="wrapper">
