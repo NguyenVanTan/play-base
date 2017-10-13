@@ -8,13 +8,17 @@ POST    /login                           controllers.LoginController.authenticat
 
 GET     /logout                          controllers.LoginController.logout()
 
-GET     /management                      controllers.AppController.management()
+GET     /dashboard                       controllers.AppController.dashboard()
 
-GET     /userlist                        controllers.AppController.userlist()
-GET     /removeUser:userId               controllers.AppController.removeUser(userId: Int)
+GET     /profile                         controllers.AppController.profile()
+POST     /profile                        controllers.AppController.profile_save()
+
+GET     /management-user                 controllers.AppController.management_user()
+
+GET     /removeUser:userId               controllers.AppController.remove_user(userId: Int)
 
 GET     /register                        controllers.UserController.newRegister()
 POST    /register                        controllers.UserController.register()
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET     /assets/*file                    controllers.Assets.versioned(path="/public", file: Asset)

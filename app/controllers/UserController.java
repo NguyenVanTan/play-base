@@ -50,9 +50,11 @@ public class UserController extends Controller {
 
         user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
         user.setCreationDate(Calendar.getInstance().getTime());
+        user.setCreationBy("Manual Registration");
+        user.setType(2);
 
         repository.add(user);
         flash("success", String.format("Successfully register user %s", user.getEmail()));
-        return redirect(routes.UserController.newRegister());
+        return redirect(routes.LoginController.login());
     }
 }

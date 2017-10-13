@@ -23,7 +23,7 @@ public class LoginController extends Controller {
     private final Form<Login> loginForm;
 
     @Inject
-    public LoginController(FormFactory formFactory, Repository repository) {
+    public LoginController(Repository repository, FormFactory formFactory) {
         this.repository = repository;
         loginForm = formFactory.form(Login.class);
     }
@@ -39,8 +39,9 @@ public class LoginController extends Controller {
     }
 
     public Result logout() {
+        String userName = session().get("userName");
         session().clear();
-        return ok("THANK YOU FOR EVERYTHING !");
+        return ok(views.html.logout.render(userName));
     }
 
     @RequireCSRFCheck
@@ -75,8 +76,10 @@ public class LoginController extends Controller {
 
         session().clear();
         session("email", email);
+        session("userType", String.valueOf(user.getType()));
+        session("userName", user.getName());
 
-        return redirect(routes.AppController.management());
+        return redirect(routes.AppController.dashboard());
     }
 
 }

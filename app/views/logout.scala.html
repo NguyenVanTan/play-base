@@ -1,0 +1,22 @@
+@(userName: String)
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>SEE YOU !</title>
+        <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("template/bootstrap/dist/css/bootstrap.min.css")">
+    </head>
+
+    <body>
+        <table width="100%" height="600px"><tr><td align="center">
+            <div class = "content-wrapper">
+                <span>Dear&nbsp;<b>@userName</b></span><br>
+                <span>THANK YOU !</span><br>
+                <a href="login">Sign in again ...</a>
+            </div>
+        </td></tr></table>
+    </body>
+</html>
