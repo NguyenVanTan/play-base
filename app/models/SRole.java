@@ -1,5 +1,7 @@
 package models;
 
+import play.data.validation.Constraints;
+
 import java.io.Serializable;
 import javax.persistence.*;
 
@@ -22,6 +24,7 @@ public class SRole implements Serializable {
 	private String roleDesc;
 
 	@Column(name="role_name")
+	@Constraints.Required
 	private String roleName;
 
 	public SRole() {
