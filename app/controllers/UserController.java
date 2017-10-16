@@ -23,7 +23,7 @@ public class UserController extends Controller {
     public UserController(FormFactory formFactory, Repository repository) {
         this.repository = repository;
         this.formFactory = formFactory;
-        registerForm = formFactory.form(SUser.class);
+        registerForm = formFactory.form(SUser.class, SUser.Register.class);
     }
 
     public Result newRegister() {

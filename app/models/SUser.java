@@ -17,6 +17,9 @@ import java.util.Date;
 public class SUser implements Serializable {
 	private static final long serialVersionUID = 1L;
 
+	public interface Register{}
+	public interface Update{}
+
 	@Id
 	private int id;
 
@@ -29,18 +32,18 @@ public class SUser implements Serializable {
 
 	private String description;
 
-	@Constraints.Required
-	@Constraints.Email
+	@Constraints.Required(groups = {Register.class, Update.class})
+	@Constraints.Email(groups = {Register.class, Update.class})
 	private String email;
 
 	private int gender;
 
 	private String mobile;
 
-	@Constraints.Required
+	@Constraints.Required(groups = {Register.class, Update.class})
 	private String name;
 
-	@Constraints.Required
+	@Constraints.Required(groups = Register.class)
 	private String password;
 
 	private int type;

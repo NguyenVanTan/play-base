@@ -66,7 +66,7 @@ public class AppController extends Controller {
         DynamicForm requestData = formFactory.form().bindFromRequest();
         String confirmPassword = requestData.get("confirmPassword");
 
-        Form<SUser> boundForm = formFactory.form(SUser.class).bindFromRequest();
+        Form<SUser> boundForm = formFactory.form(SUser.class, SUser.Update.class).bindFromRequest();
         if (boundForm.hasErrors()) {
             flash("error", "Please correct the form below.");
             return badRequest(views.html.profile.render(currentUser, boundForm));
@@ -80,7 +80,9 @@ public class AppController extends Controller {
         }
 
         currentUser.setName(user.getName());
-        currentUser.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
+        if (user.getPassword() != null && !user.getPassword().equals("")) {
+            currentUser.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
+        }
         currentUser.setMobile(user.getMobile());
         currentUser.setGender(user.getGender());
 
