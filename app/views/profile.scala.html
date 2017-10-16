@@ -9,6 +9,9 @@
             @if(flash.containsKey("error")) {
                 <div><span style="color: red">@flash.get("error")</span></div>
             }
+            @if(flash.containsKey("success")) {
+                <div><span style="color: red">@flash.get("success")</span></div>
+            }
 
             <div class="forms">
                 <table>
@@ -18,7 +21,9 @@
                     </tr>
                     <tr>
                         <td><span>Email:</span></td>
-                        <td>@helper.inputText(registerForm("email"), '_label -> "", 'size -> "30", '_showConstraints -> false)</td>
+                        <td><span>@registerForm("email").value</span>
+                            <input type="hidden" name="email" value="@registerForm("email").value" />
+                        </td>
                     </tr>
                     <tr>
                         <td><span>New Password:</span></td>

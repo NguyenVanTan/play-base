@@ -53,12 +53,22 @@ public class JPARepository implements Repository {
         return supplyAsync(() -> wrap(em -> insert(em, user)), executionContext);
     }
 
+    @Override
+    public CompletionStage<SUser> update(SUser user) {
+        return supplyAsync(() -> wrap(em -> update(em, user)), executionContext);
+    }
+
     private <T> T wrap(Function<EntityManager, T> function) {
         return jpaApi.withTransaction(function);
     }
 
     private SUser insert(EntityManager em, SUser user) {
         em.persist(user);
+        return user;
+    }
+
+    private SUser update(EntityManager em, SUser user) {
+        em.merge(user);
         return user;
     }
 

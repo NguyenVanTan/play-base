@@ -16,6 +16,8 @@ public interface Repository {
 
     CompletionStage<SUser> add(SUser user);
 
+    CompletionStage<SUser> update(SUser user);
+
     CompletionStage<List<SUser>> getAllUser();
 
     CompletionStage<SUser> getUserByEmail(String email);
