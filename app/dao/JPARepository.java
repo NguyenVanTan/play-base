@@ -1,5 +1,6 @@
 package dao;
 
+import models.CNotice;
 import play.db.jpa.JPAApi;
 
 import javax.inject.*;
@@ -25,6 +26,20 @@ public class JPARepository implements Repository {
     public JPARepository(JPAApi api, DatabaseExecutionContext executionContext) {
         this.jpaApi = api;
         this.executionContext = executionContext;
+    }
+
+    public CompletionStage<List<CNotice>> getCreatedNotices(Integer userId){
+        return supplyAsync(() -> wrap(em -> fetchCreatedNoticeByUser(em, userId)), executionContext);
+    }
+
+    public CompletionStage<List<CNotice>> getReceivedNotices(Integer userId){
+        return null;
+    }
+
+    private List<CNotice> fetchCreatedNoticeByUser(EntityManager em, Integer userId){
+       return em.createQuery("select p from CNotice p where p.createdBy = ? order by p.creationTime DESC", CNotice.class)
+               .setParameter(0, userId)
+               .getResultList();
     }
 
     @Override

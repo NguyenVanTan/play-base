@@ -34,6 +34,18 @@ public class CNotice implements Serializable {
 
 	private int status;
 
+	public String getReceiver() {
+		return receiver;
+	}
+
+	@Column
+	public void setReceiver(String receiver) {
+		this.receiver = receiver;
+	}
+
+	@Transient
+	private String receiver;
+
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name="update_time")
 	private Date updateTime;
@@ -95,6 +107,17 @@ public class CNotice implements Serializable {
 
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
+	}
+
+	public String getStatusLabel() {
+		switch (getStatus()) {
+			case 0:
+				return "DRAF";
+			case 1:
+				return "SENT";
+			default:
+				return "";
+		}
 	}
 
 }

@@ -9,9 +9,10 @@ POST    /login                           controllers.LoginController.authenticat
 GET     /logout                          controllers.LoginController.logout()
 
 GET     /dashboard                       controllers.AppController.dashboard()
+POST    /dashboard                       controllers.AppController.dashboard_save()
 
 GET     /profile                         controllers.AppController.profile()
-POST     /profile                        controllers.AppController.profile_save()
+POST    /profile                         controllers.AppController.profile_save()
 
 GET     /management-user                 controllers.AppController.management_user()
 
@@ -19,6 +20,11 @@ GET     /removeUser:userId               controllers.AppController.remove_user(u
 
 GET     /register                        controllers.UserController.newRegister()
 POST    /register                        controllers.UserController.register()
+
+GET     /roles/new                       controllers.AppController.newRole()
+GET     /roles/:roleId                   controllers.AppController.roleDetail(roleId: Int)
+POST    /roles                           controllers.AppController.saveRole()
+GET     /roles                           controllers.AppController.management_role()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file                    controllers.Assets.versioned(path="/public", file: Asset)

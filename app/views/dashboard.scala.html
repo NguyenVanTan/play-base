@@ -1,6 +1,90 @@
+@(userType: String, userName: String, noticeList: List[CNotice], userList: Map[String, String], noticeForm: Form[CNotice])
 
-@(userType: String, userName: String)
+@import helper._
 
 @mainframe("Dashboard", userType, userName) {
-    <div><span>I'm FINE</span></div>
+    <table class="table table-striped">
+        <tr><td colspan="3"><h2>All Notices</h2></td></tr>
+        <tr>
+            <td colspan="3">
+                <form>
+                    <span>Filter by: &nbsp;</span>
+                    <input type="radio" name="filter" value="All" checked> All &nbsp;
+                    <input type="radio" name="filter" value=Sent"> Sent &nbsp;
+                    <input type="radio" name="filter" value="Draf"> Draf
+                </form>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Message</th>
+                            <th>Receiver</th>
+                            <th>Status</th>
+                            <th>Creation_Time</th>
+                            <th>Update_Time</th
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @for((notice, index) <- noticeList.zipWithIndex) {
+                        <tr>
+                            <th width="35px">@{
+                                index + 1
+                            }</th>
+                            <td><span><a>@notice.getNoticeMessage()</a></span></td>
+                            <td><span>@notice.getReceiver()</span></td>
+                            <td><span>@notice.getStatusLabel()</span></td>
+                            <td><span>@notice.getCreationTime()</span></td>
+                            <td><span>@notice.getUpdateTime()</span></td>
+                            <td><a href="#">Remove</a></td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </td>
+            <td width="3%"></td>
+            <td width="40%">
+            @helper.form(routes.AppController.dashboard_save()) {
+                @CSRF.formField
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <td colspan="2">Create or update a notice</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span>Content: </span></td>
+                            <td><textarea rows="6" cols="65"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td><span>Receiver: </span></td>
+                            <td>
+                            @select(
+                                noticeForm("receiver"),
+                                options(userList),
+                                '_label -> "",
+                                '_default -> " -- All --",
+                                '_showConstraints -> false
+                            )
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" height="30px" align="center">
+                                <input type="button" value="Sent">&nbsp;&nbsp;
+                                <input type="button" value="Save as Draf">&nbsp;&nbsp;
+                                <input type="reset" value="Cancel">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            }
+            </td>
+        </tr>
+    </table>
 }
