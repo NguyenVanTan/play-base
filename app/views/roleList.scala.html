@@ -1,35 +1,44 @@
-
 @(roleList: List[SRole], userType: String, userName: String)
+@import helper._
 
 @mainframe("Role management", userType, userName) {
-    <table class="table table-striped">
-        <thead>
-            <tr><td colspan="3"><h2>All Roles</h2></td></tr>
-            <tr>
-                <td colspan="3">
-                    @if(flash.containsKey("error")) {
-                        <div><span style="color: red">@flash.get("error")</span></div>
-                    }
-                    @if(flash.containsKey("success")) {
-                        <div><span style="color: red">@flash.get("success")</span></div>
-                    }
-                </td>
-            </tr>
-            <tr><td colspan="3"><a href='@routes.AppController.newRole()'>Create new role</a></td></tr>
-            <tr>
-                <th>STT</th>
-                <th>Name</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-        @for((role, index) <- roleList.zipWithIndex) {
-            <tr>
-                <th width="35px"><a href='@routes.AppController.roleDetail(role.getRoleId)'>@{index + 1}</a></th>
-                <td><a href='@routes.AppController.roleDetail(role.getRoleId)'>@role.getRoleName()</a></td>
-                <td><span>@role.getRoleDesc()</span></td>
-            </tr>
-        }
-        </tbody>
-    </table>
+    @helper.form(action = routes.AppController.deleteRoles()) {
+        @CSRF.formField
+        <table class="table table-striped">
+            <thead>
+                <tr><td colspan="3"><h2>All Roles</h2></td></tr>
+                <tr>
+                    <td colspan="3">
+                        @if(flash.containsKey("error")) {
+                            <div><span style="color: red">@flash.get("error")</span></div>
+                        }
+                        @if(flash.containsKey("success")) {
+                            <div><span style="color: red">@flash.get("success")</span></div>
+                        }
+                    </td>
+                </tr>
+                <tr><td colspan="3"><a href='@routes.AppController.newRole()'>Create new role</a><input id="submit" type="submit" value = "Delete" /></td></tr>
+                <tr>
+                    <th><input type="checkbox" name="checkAll" onclick="alert('asdf');"></th>
+                    <th>STT</th>
+                    <th>Name</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+            @for((role, index) <- roleList.zipWithIndex) {
+                <tr>
+                    <th><input type="checkbox" name="checked" value="@role.getRoleId"></th>
+                    <th width="35px"><a href='@routes.AppController.roleDetail(role.getRoleId)'>@{
+                        index + 1
+                    }</a>
+                    </th>
+                    <td><a href='@routes.AppController.roleDetail(role.getRoleId)'>@role.getRoleName()</a></td>
+                    <td><span>@role.getRoleDesc()</span></td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    }
 }
+

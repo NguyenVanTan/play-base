@@ -37,6 +37,7 @@ public class AppController extends Controller {
     @Inject
     public AppController(Repository repository, RoleRepository roleRepository, FormFactory formFactory){
         this.repository = repository;
+        this.roleRepository = roleRepository;
         this.formFactory = formFactory;
     }
 
@@ -206,5 +207,35 @@ public class AppController extends Controller {
             e.printStackTrace();
             return notFound("Role list not found");
         }
+    }
+
+    public Result deleteRoles() {
+        Map<String, String[]> map = request().body().asFormUrlEncoded();
+        String[] checkedVal = map.get("checked");
+
+        if (checkedVal == null) {
+            flash("error", "Please check role for delete!");
+            return redirect(routes.AppController.management_role());
+        }
+
+        String result = "(";
+        for (String s : checkedVal) {
+            result += s;
+            result += ",";
+        }
+        if (result.endsWith(",")) {
+            result = result.substring(0, result.length() - 1);
+        }
+        result += ")";
+
+        int deletedRecordCount = 0;
+        try {
+            deletedRecordCount = roleRepository.deleteRoleByIds(result).toCompletableFuture().get();
+            flash("success", "Successful delete!");
+        } catch (Exception e) {
+            flash("error", "Cannot delete!");
+        }
+
+        return redirect(routes.AppController.management_role());
     }
 }

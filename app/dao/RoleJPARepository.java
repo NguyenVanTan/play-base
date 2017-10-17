@@ -45,6 +45,11 @@ public class RoleJPARepository implements RoleRepository {
         return supplyAsync(() -> wrap(em -> fetchRoleById(em, roleId)), executionContext);
     }
 
+    @Override
+    public CompletionStage<Integer> deleteRoleByIds(String roleIds) {
+        return supplyAsync(() -> wrap(em -> deleteRoleByIds(em, roleIds)), executionContext);
+    }
+
     private SRole insert(EntityManager em, SRole role) {
         em.persist(role);
         return role;
@@ -64,5 +69,10 @@ public class RoleJPARepository implements RoleRepository {
         return em.createQuery("select p from SRole p where p.roleId = ?", SRole.class)
                 .setParameter(0, roleId)
                 .getSingleResult();
+    }
+
+    private int deleteRoleByIds(EntityManager em, String roleIds){
+        return em.createNativeQuery("delete from s_roles where role_id in " + roleIds)
+                .executeUpdate();
     }
 }
