@@ -37,7 +37,6 @@ public class AppController extends Controller {
     @Inject
     public AppController(Repository repository, RoleRepository roleRepository, FormFactory formFactory){
         this.repository = repository;
-        this.roleRepository = roleRepository;
         this.formFactory = formFactory;
     }
 

@@ -1,0 +1,41 @@
+@(user: SUser, registerForm: Form[SRole])
+@import helper._
+
+@mainframe("Role", String.valueOf(user.getType()), user.getName()) {
+    @helper.form(routes.AppController.saveRole) {
+        @CSRF.formField
+        <div>
+            <div><h2>Role</h2></div>
+            @if(flash.containsKey("error")) {
+                <div><span style="color: red">@flash.get("error")</span></div>
+            }
+            @if(flash.containsKey("success")) {
+                <div><span style="color: red">@flash.get("success")</span></div>
+            }
+            <div><a href='@routes.AppController.management_role()'>Back</a></div>
+            <div class="forms">
+                <table>
+                    <tr>
+                        <td><span>Role Name:</span></td>
+                        <td>@helper.inputText(registerForm("roleName"), '_label -> "", 'size -> "30", '_showConstraints -> false)
+                            @if(registerForm("roleId").value != null) {
+                                <input type="hidden" name="roleId" value="@registerForm("roleId").value" />
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span>Description:</span></td>
+                        <td>@helper.inputText(registerForm("roleDesc"), '_label -> "", 'size -> "30", '_showConstraints -> false)</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="center">
+                            <input id="submit" type="submit" value = "Save" />
+                            <input id="reset" type="reset" value = "Cancel" />
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="footer">Copyright by Framgia</div>
+    }
+}
