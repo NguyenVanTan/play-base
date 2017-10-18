@@ -16,4 +16,6 @@ public interface RoleRepository {
     CompletionStage<List<SRole>> getAllRole();
 
     CompletionStage<SRole> getRoleById(int roleId);
+
+    CompletionStage<Integer> deleteRoleByIds(String roleIds);
 }
