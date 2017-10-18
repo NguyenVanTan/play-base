@@ -34,7 +34,7 @@
             <tbody>
             @for((user, index) <- userList.zipWithIndex) {
                 <tr>
-                    <th><input type="checkbox" name="checked" value="@user.getId()"></th>
+                    <th><input type="checkbox" class="checkbox" name="checked" value="@user.getId()"></th>
                     <th width="35px">@{
                         index + 1
                     }</th>

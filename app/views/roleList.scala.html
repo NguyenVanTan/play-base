@@ -28,7 +28,7 @@
             <tbody>
             @for((role, index) <- roleList.zipWithIndex) {
                 <tr>
-                    <th><input type="checkbox" name="checked" value="@role.getRoleId"></th>
+                    <th><input type="checkbox" class="checkbox" name="checked" value="@role.getRoleId"></th>
                     <th width="35px"><a href='@routes.AppController.roleDetail(role.getRoleId)'>@{
                         index + 1
                     }</a>

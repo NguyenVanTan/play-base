@@ -7,6 +7,14 @@ $('#checkAll').change(function(){
     }
 });
 
+$('.checkbox').on('click',function(){
+    if($('.checkbox:checked').length == $('.checkbox').length){
+        $('#checkAll').prop('checked',true);
+    }else{
+        $('#checkAll').prop('checked',false);
+    }
+});
+
 $('#deleteForm').submit(function() {
     return confirm("Are you sure you want to delete record(s)?");
 });
