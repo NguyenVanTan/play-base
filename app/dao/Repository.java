@@ -27,4 +27,6 @@ public interface Repository {
 
     CompletionStage<String> saveNotice(CNotice notice, List<Integer> receiverIds);
 
+    CompletionStage<Integer> deleteUserByIds(String userIds);
+
 }

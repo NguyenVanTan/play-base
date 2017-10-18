@@ -162,8 +162,84 @@ public class AppController extends Controller {
         }
     }
 
-    public Result remove_user(Int userId) {
-        return ok("OK");
+    public Result userDetail(String email) {
+        try {
+            SUser user = repository.getUserByEmail(email).toCompletableFuture().get();
+            Form<SUser> profileForm = formFactory.form(SUser.class);
+            return ok(views.html.userDetail.render(user, profileForm.fill(user), null));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return notFound("User not found");
+        }
+    }
+
+    @RequireCSRFCheck
+    public Result user_save() {
+        SUser currentUser = null;
+        try {
+            currentUser = repository.getUserByEmail(session("email")).toCompletableFuture().get();
+        } catch (Exception e) {
+            return notFound("User not found");
+        }
+
+        DynamicForm requestData = formFactory.form().bindFromRequest();
+        String confirmPassword = requestData.get("confirmPassword");
+
+        Form<SUser> boundForm = formFactory.form(SUser.class, SUser.Update.class).bindFromRequest();
+        if (boundForm.hasErrors()) {
+            flash("error", "Please correct the form below.");
+            return badRequest(views.html.userDetail.render(currentUser, boundForm, null));
+        }
+
+        SUser user = boundForm.get();
+
+        if (!user.getPassword().equals(confirmPassword)) {
+            flash("error", "Please correct the confirm password");
+            return badRequest(views.html.userDetail.render(currentUser, boundForm, null));
+        }
+
+        SUser updateUser = null;
+        try {
+            updateUser = repository.getUserByEmail(user.getEmail()).toCompletableFuture().get();
+        } catch (Exception e) {
+            return notFound("User not found");
+        }
+
+        updateUser.setName(user.getName());
+        if (user.getPassword() != null && !user.getPassword().equals("")) {
+            updateUser.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
+        }
+        updateUser.setMobile(user.getMobile());
+        updateUser.setGender(user.getGender());
+
+        repository.update(updateUser);
+        flash("success", String.format("Successfully update user %s", updateUser.getEmail()));
+        Form<SUser> profileForm = formFactory.form(SUser.class);
+        return ok(views.html.userDetail.render(currentUser, profileForm.fill(updateUser), null));
+    }
+
+    public Result deleteUsers() {
+        Map<String, String[]> map = request().body().asFormUrlEncoded();
+        String[] checkedVal = map.get("checked");
+
+        if (checkedVal == null) {
+            flash("error", "Please check user for delete!");
+            return redirect(routes.AppController.management_user());
+        }
+
+        String ids = "(";
+        ids += String.join(",", checkedVal);
+        ids += ")";
+
+        int deletedRecordCount = 0;
+        try {
+            deletedRecordCount = repository.deleteUserByIds(ids).toCompletableFuture().get();
+            flash("success", "Successful delete!");
+        } catch (Exception e) {
+            flash("error", "Cannot delete!");
+        }
+
+        return redirect(routes.AppController.management_user());
     }
 
     public Result newRole() {
