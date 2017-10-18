@@ -2,7 +2,7 @@
 @import helper._
 
 @mainframe("Role management", userType, userName) {
-    @helper.form(action = routes.AppController.deleteRoles()) {
+    @helper.form(action = routes.AppController.deleteRoles(), 'id -> "deleteForm") {
         @CSRF.formField
         <table class="table table-striped">
             <thead>
@@ -17,9 +17,9 @@
                         }
                     </td>
                 </tr>
-                <tr><td colspan="3"><a href='@routes.AppController.newRole()'>Create new role</a><input id="submit" type="submit" value = "Delete" /></td></tr>
+                <tr><td colspan="3"><a href='@routes.AppController.newRole()'>Create new role</a><input id="delete" type="submit" value = "Delete" /></td></tr>
                 <tr>
-                    <th><input type="checkbox" name="checkAll" onclick="alert('asdf');"></th>
+                    <th><input type="checkbox" name="checkAll" id="checkAll"></th>
                     <th>STT</th>
                     <th>Name</th>
                     <th>Description</th>
@@ -41,4 +41,5 @@
         </table>
     }
 }
+<script src="@routes.Assets.versioned("javascripts/roleManagement.js")" type="text/javascript"></script>
 

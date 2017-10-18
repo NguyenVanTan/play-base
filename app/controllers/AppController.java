@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -222,11 +223,19 @@ public class AppController extends Controller {
         if (checkRole != null) {
             checkRole.setRoleName(role.getRoleName());
             checkRole.setRoleDesc(role.getRoleDesc());
-            roleRepository.update(role);
+            try {
+                roleRepository.update(role).toCompletableFuture().get();
+            } catch (Exception e) {
+                flash("error", String.format("Error update role %s", role.getRoleName()));
+            }
             flash("success", String.format("Successfully update role %s", role.getRoleName()));
             return ok(views.html.roleDetail.render(currentUser, boundForm));
         } else {
-            roleRepository.add(role);
+            try {
+                roleRepository.add(role).toCompletableFuture().get();
+            } catch (Exception e) {
+                flash("error", String.format("Error add role %s", role.getRoleName()));
+            }
             flash("success", String.format("Successfully add role %s", role.getRoleName()));
             return redirect(routes.AppController.management_role());
         }
@@ -252,13 +261,7 @@ public class AppController extends Controller {
         }
 
         String result = "(";
-        for (String s : checkedVal) {
-            result += s;
-            result += ",";
-        }
-        if (result.endsWith(",")) {
-            result = result.substring(0, result.length() - 1);
-        }
+        result += String.join(",", checkedVal);
         result += ")";
 
         int deletedRecordCount = 0;
