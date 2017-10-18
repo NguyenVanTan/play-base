@@ -3,10 +3,10 @@ package controllers;
 import dao.Repository;
 import dao.RoleRepository;
 import models.CNotice;
-import models.Login;
 import models.SRole;
 import models.SUser;
 import org.mindrot.jbcrypt.BCrypt;
+import play.Logger;
 import play.data.DynamicForm;
 import play.data.Form;
 import play.data.FormFactory;
@@ -17,10 +17,9 @@ import play.mvc.Security;
 import scala.Int;
 
 import javax.inject.Inject;
-import java.util.Calendar;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -33,10 +32,12 @@ public class AppController extends Controller {
     private final Repository repository;
     private final RoleRepository roleRepository;
     private final FormFactory formFactory;
+    private SUser userLogin = null;
 
     @Inject
     public AppController(Repository repository, RoleRepository roleRepository, FormFactory formFactory){
         this.repository = repository;
+        this.roleRepository = roleRepository;
         this.formFactory = formFactory;
     }
 
@@ -47,17 +48,28 @@ public class AppController extends Controller {
      * <code>GET</code> request with a path of <code>/</code>.
      */
     public Result dashboard() {
+        DynamicForm requestData = formFactory.form().bindFromRequest();
+        String filterType = requestData.get("filter");
+        Logger.of("application").info("filterType: " + filterType);
+        Integer noticeType = CNotice.convertStatusFromString(filterType);
+
         try {
-            SUser user = repository.getUserByEmail(session("email")).toCompletableFuture().get();
-            Integer userId = user.getId();
-            List<CNotice> noticeList = repository.getCreatedNotices(userId).toCompletableFuture().get();
-            Map<String, String> allUser = repository.getAllUser()
+            if(userLogin == null){
+                userLogin = repository.getUserByEmail(session("email")).toCompletableFuture().get();
+            }
+
+            Integer userId = userLogin.getId();
+            List<CNotice> noticeList = repository.getCreatedNotices(userId, noticeType).toCompletableFuture().get();
+
+            Logger.of("application").info("Notice size: " + noticeList.size());
+            List<SUser> userList = repository.getAllUser()
                     .toCompletableFuture()
                     .get()
                     .stream()
                     .filter(e -> e.getId() != userId)
-                    .collect(Collectors.toMap(c -> String.valueOf(c.getId()), c -> (c.getName() + " - " + c.getEmail())));
-            return ok(views.html.dashboard.render(session().get("userType"), session().get("userName"), noticeList, allUser, formFactory.form(CNotice.class)));
+                    .collect(Collectors.toList());
+
+            return ok(views.html.dashboard.render(session().get("userType"), session().get("userName"), filterType, noticeList, userList, formFactory.form(CNotice.class)));
         } catch (Exception e) {
             e.printStackTrace();
             return notFound("User not found");
@@ -65,7 +77,28 @@ public class AppController extends Controller {
     }
 
     public Result dashboard_save() {
-        return ok("OK");
+        DynamicForm requestData = formFactory.form().bindFromRequest();
+        String msg = requestData.get("noticeMessage");
+
+        Logger.of("application").info("Message: " + msg);
+
+        List<Integer> receiverIds = Arrays.asList(24,26,29,27);
+
+        CNotice notice = new CNotice();
+        notice.setNoticeMessage(msg);
+        notice.setStatus(NoticeStatus.SENT.getStatusId());
+        notice.setCreationTime(new Date(System.currentTimeMillis()));
+        notice.setCreatedBy(userLogin.getId());
+        notice.setReceiver(receiverIds.toString());
+
+        try {
+            repository.saveNotice(notice, receiverIds).toCompletableFuture().get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return badRequest("Can not save notice");
+        }
+
+        return dashboard();
     }
 
     public Result profile() {
@@ -206,5 +239,35 @@ public class AppController extends Controller {
             e.printStackTrace();
             return notFound("Role list not found");
         }
+    }
+
+    public Result deleteRoles() {
+        Map<String, String[]> map = request().body().asFormUrlEncoded();
+        String[] checkedVal = map.get("checked");
+
+        if (checkedVal == null) {
+            flash("error", "Please check role for delete!");
+            return redirect(routes.AppController.management_role());
+        }
+
+        String result = "(";
+        for (String s : checkedVal) {
+            result += s;
+            result += ",";
+        }
+        if (result.endsWith(",")) {
+            result = result.substring(0, result.length() - 1);
+        }
+        result += ")";
+
+        int deletedRecordCount = 0;
+        try {
+            deletedRecordCount = roleRepository.deleteRoleByIds(result).toCompletableFuture().get();
+            flash("success", "Successful delete!");
+        } catch (Exception e) {
+            flash("error", "Cannot delete!");
+        }
+
+        return redirect(routes.AppController.management_role());
     }
 }

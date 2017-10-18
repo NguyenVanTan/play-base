@@ -1,23 +1,38 @@
-@(userType: String, userName: String, noticeList: List[CNotice], userList: Map[String, String], noticeForm: Form[CNotice])
+@(userType: String, userName: String, filterType: String, noticeList: List[CNotice], userList: List[SUser], noticeForm: Form[CNotice])
 
 @import helper._
 
 @mainframe("Dashboard", userType, userName) {
-    <table class="table table-striped">
+    <table border="1">
         <tr><td colspan="3"><h2>All Notices</h2></td></tr>
         <tr>
             <td colspan="3">
-                <form>
+                @helper.form(action = routes.AppController.dashboard(), 'id -> "filterForm") {
                     <span>Filter by: &nbsp;</span>
-                    <input type="radio" name="filter" value="All" checked> All &nbsp;
-                    <input type="radio" name="filter" value=Sent"> Sent &nbsp;
-                    <input type="radio" name="filter" value="Draf"> Draf
-                </form>
+
+                    @if(filterType == null || filterType.equalsIgnoreCase("ALL")){
+                        <input type="radio" name="filter" value="All" checked> All &nbsp;
+                    } else {
+                        <input type="radio" name="filter" value="All"> All &nbsp;
+                    }
+
+                    @if(filterType != null && filterType.equalsIgnoreCase("SENT")){
+                        <input type="radio" name="filter" value="Sent" checked> Sent &nbsp;
+                    } else {
+                        <input type="radio" name="filter" value="Sent"> Sent &nbsp;
+                    }
+
+                    @if(filterType != null && filterType.equalsIgnoreCase("DRAFT")){
+                        <input type="radio" name="filter" value="Draft" checked> Draft
+                    } else {
+                        <input type="radio" name="filter" value="Draft"> Draft
+                    }
+                    <input type="submit" id="apply" value = "Apply Filter">
+                }
             </td>
         </tr>
-
         <tr>
-            <td>
+            <td valign="top">
                 <table class="table table-striped">
                     <thead>
                         <tr>
@@ -26,58 +41,61 @@
                             <th>Receiver</th>
                             <th>Status</th>
                             <th>Creation_Time</th>
-                            <th>Update_Time</th
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
                     @for((notice, index) <- noticeList.zipWithIndex) {
                         <tr>
-                            <th width="35px">@{
-                                index + 1
-                            }</th>
-                            <td><span><a>@notice.getNoticeMessage()</a></span></td>
-                            <td><span>@notice.getReceiver()</span></td>
-                            <td><span>@notice.getStatusLabel()</span></td>
+                            <th width="35px">@{index + 1}</th>
+                            <td>
+                            @if(NoticeStatus.isDraft(notice.getStatus())) {
+                                <span><a>@notice.getShortMessage()</a></span>
+                            } else {
+                                <span>@notice.getShortMessage()</span>
+
+                            }
+                            </td>
+                            <td><span>...</span></td>
+                            <td><span>@notice.getStatusAsString()</span></td>
                             <td><span>@notice.getCreationTime()</span></td>
-                            <td><span>@notice.getUpdateTime()</span></td>
-                            <td><a href="#">Remove</a></td>
+                            <td>@if(NoticeStatus.isDraft(notice.getStatus())) {
+                                <a href="#"><img src="@routes.Assets.versioned("images/remove.jpg")" title="Remove this notice"></a>
+                            }
+                            </td>
                         </tr>
                     }
                     </tbody>
                 </table>
             </td>
-            <td width="3%"></td>
+            <td width="1%"></td>
             <td width="40%">
-            @helper.form(routes.AppController.dashboard_save()) {
+            @helper.form(action = routes.AppController.dashboard_save(), 'id -> "noticeForm") {
                 @CSRF.formField
                 <table class="table table-striped">
                     <thead>
                         <tr>
-                            <td colspan="2">Create or update a notice</td>
+                            <td colspan="2"><h3>Create or update a notice</h3></td>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td><span>Content: </span></td>
-                            <td><textarea rows="6" cols="65"></textarea></td>
+                            <td>@helper.textarea(noticeForm("noticeMessage"), '_label -> "", 'cols -> "65", 'rows -> "10")</td>
                         </tr>
                         <tr>
                             <td><span>Receiver: </span></td>
-                            <td>
-                            @select(
-                                noticeForm("receiver"),
-                                options(userList),
-                                '_label -> "",
-                                '_default -> " -- All --",
-                                '_showConstraints -> false
-                            )
+                            <td id="checkbox_receiver_group">
+                                <input type="checkbox" name = "ckb0" value="All"> All<br>
+                                @for((user, index) <- userList.zipWithIndex){
+                                    <input type="checkbox" name = @{"ckb" + (index + 1)} value = "@user.getId()">&nbsp;@user.getEmail()<br>
+                                }
                             </td>
                         </tr>
                         <tr>
                             <td colspan="2" height="30px" align="center">
-                                <input type="button" value="Sent">&nbsp;&nbsp;
-                                <input type="button" value="Save as Draf">&nbsp;&nbsp;
+                                <input type="submit" value="Sent">&nbsp;&nbsp;
+                                <input type="button" value="Save as Draf"> &nbsp;&nbsp;
                                 <input type="reset" value="Cancel">
                             </td>
                         </tr>

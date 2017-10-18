@@ -1,8 +1,12 @@
 package models;
 
+import controllers.NoticeStatus;
+import play.data.validation.Constraints;
+
 import java.io.Serializable;
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -17,6 +21,7 @@ public class CNotice implements Serializable {
 
 	@Id
 	@Column(name="notice_id")
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int noticeId;
 
 	@Column(name="created_by")
@@ -26,6 +31,7 @@ public class CNotice implements Serializable {
 	@Column(name="creation_time")
 	private Date creationTime;
 
+	@Constraints.Required
 	@Column(name="notice_message")
 	private String noticeMessage;
 
@@ -81,6 +87,13 @@ public class CNotice implements Serializable {
 		return this.noticeMessage;
 	}
 
+	public String getShortMessage() {
+		if (noticeMessage == null || noticeMessage.length() < 50) {
+			return noticeMessage;
+		}
+		return noticeMessage.substring(0, 50) + " ...";
+	}
+
 	public void setNoticeMessage(String noticeMessage) {
 		this.noticeMessage = noticeMessage;
 	}
@@ -109,15 +122,20 @@ public class CNotice implements Serializable {
 		this.updateTime = updateTime;
 	}
 
-	public String getStatusLabel() {
-		switch (getStatus()) {
-			case 0:
-				return "DRAF";
-			case 1:
-				return "SENT";
-			default:
-				return "";
+	public String getStatusAsString() {
+		NoticeStatus noticeStatus = NoticeStatus.valueOfId(getStatus());
+		if(noticeStatus == null){
+			return "";
 		}
+		return noticeStatus.getStatusName();
+	}
+
+	public static Integer convertStatusFromString(String status){
+		NoticeStatus noticeStatus = NoticeStatus.valueOfName(status);
+		if(noticeStatus == null){
+			return NoticeStatus.ALL.getStatusId();
+		}
+		return noticeStatus.getStatusId();
 	}
 
 }

@@ -21,7 +21,10 @@ public interface Repository {
 
     CompletionStage<SUser> getUserByEmail(String email);
 
-    CompletionStage<List<CNotice>> getCreatedNotices(Integer userId);
+    CompletionStage<List<CNotice>> getCreatedNotices(Integer userId, Integer noticeType);
 
     CompletionStage<List<CNotice>> getReceivedNotices(Integer userId);
+
+    CompletionStage<String> saveNotice(CNotice notice, List<Integer> receiverIds);
+
 }

@@ -1,6 +1,10 @@
 package dao;
 
+import controllers.NoticeStatus;
 import models.CNotice;
+import models.CUserNotice;
+import models.CUserNoticePK;
+import play.Logger;
 import play.db.jpa.JPAApi;
 
 import javax.inject.*;
@@ -28,17 +32,24 @@ public class JPARepository implements Repository {
         this.executionContext = executionContext;
     }
 
-    public CompletionStage<List<CNotice>> getCreatedNotices(Integer userId){
-        return supplyAsync(() -> wrap(em -> fetchCreatedNoticeByUser(em, userId)), executionContext);
+    public CompletionStage<List<CNotice>> getCreatedNotices(Integer userId, Integer noticeType){
+        return supplyAsync(() -> wrap(em -> fetchCreatedNoticeByUser(em, userId, noticeType)), executionContext);
     }
 
     public CompletionStage<List<CNotice>> getReceivedNotices(Integer userId){
         return null;
     }
 
-    private List<CNotice> fetchCreatedNoticeByUser(EntityManager em, Integer userId){
-       return em.createQuery("select p from CNotice p where p.createdBy = ? order by p.creationTime DESC", CNotice.class)
+    private List<CNotice> fetchCreatedNoticeByUser(EntityManager em, Integer userId, Integer noticeType){
+        if(noticeType == -1){//ALL
+            return em.createQuery("select p from CNotice p where p.createdBy = ? order by p.creationTime DESC", CNotice.class)
+                    .setParameter(0, userId)
+                    .getResultList();
+        }
+
+       return em.createQuery("select p from CNotice p where p.createdBy = ? and p.status = ? order by p.creationTime DESC", CNotice.class)
                .setParameter(0, userId)
+               .setParameter(1, noticeType)
                .getResultList();
     }
 
@@ -83,8 +94,40 @@ public class JPARepository implements Repository {
     }
 
     private SUser update(EntityManager em, SUser user) {
-        em.merge(user);
-        return user;
+        return em.merge(user);
+    }
+
+    public CompletionStage<String> saveNotice(CNotice notice, List<Integer> receiverIds){
+       return supplyAsync(() -> wrap(em -> saveNotice(em, notice, receiverIds)), executionContext);
+    }
+
+    private String saveNotice(EntityManager em, CNotice notice, List<Integer> receiverIds){
+        em.persist(notice);
+        insertNoticeUser(em, notice.getNoticeId(), receiverIds);
+        return "OK";
+    }
+
+    private void insertNoticeUser(EntityManager em, int noticeId, List<Integer> receiverIds){
+        Logger.of("application").debug("Insert data into CUserNotice table for notice_id " + noticeId);
+
+        receiverIds.stream().forEach(e -> {
+            CUserNoticePK id = new CUserNoticePK();
+            id.setUserId(e);
+            id.setNoticeId(noticeId);
+
+            CUserNotice userNotice = new CUserNotice();
+            userNotice.setId(id);
+            userNotice.setStatus(NoticeStatus.UNREAD.getStatusId());
+
+            em.persist(userNotice);
+        });
+    }
+
+    private void deleteNoticeUser(EntityManager em, int noticeId){
+        Logger.of("application").debug("Delete data into CUserNotice table for notice_id " + noticeId);
+        em.createQuery("delete from CUserNotice where noticeId = ?")
+                .setParameter(0, noticeId)
+                .executeUpdate();
     }
 
 }
