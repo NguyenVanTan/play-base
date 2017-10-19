@@ -18,3 +18,7 @@ $('.checkbox').on('click',function(){
 $('#deleteForm').submit(function() {
     return confirm("Are you sure you want to delete record(s)?");
 });
+
+$(document).ready(function() {
+    $("#role").val($("#selectedRole").val());
+});

@@ -2,9 +2,7 @@ package controllers;
 
 import dao.Repository;
 import dao.RoleRepository;
-import models.CNotice;
-import models.SRole;
-import models.SUser;
+import models.*;
 import org.mindrot.jbcrypt.BCrypt;
 import play.Logger;
 import play.data.DynamicForm;
@@ -165,8 +163,19 @@ public class AppController extends Controller {
     public Result userDetail(String email) {
         try {
             SUser user = repository.getUserByEmail(email).toCompletableFuture().get();
+
+            List<SRole> listRole = roleRepository.getAllRole().toCompletableFuture().get();
+
+            String selectedRole = "";
+            try {
+                SUserRole userRole = roleRepository.getUserRoleByUserId(user.getId()).toCompletableFuture().get();
+                selectedRole = userRole == null ? "" : String.valueOf(userRole.getId().getRoleId());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
             Form<SUser> profileForm = formFactory.form(SUser.class);
-            return ok(views.html.userDetail.render(user, profileForm.fill(user), null));
+            return ok(views.html.userDetail.render(user, profileForm.fill(user), listRole, selectedRole));
         } catch (Exception e) {
             e.printStackTrace();
             return notFound("User not found");
@@ -176,8 +185,10 @@ public class AppController extends Controller {
     @RequireCSRFCheck
     public Result user_save() {
         SUser currentUser = null;
+        List<SRole> listRole;
         try {
             currentUser = repository.getUserByEmail(session("email")).toCompletableFuture().get();
+            listRole = roleRepository.getAllRole().toCompletableFuture().get();
         } catch (Exception e) {
             return notFound("User not found");
         }
@@ -188,17 +199,18 @@ public class AppController extends Controller {
         Form<SUser> boundForm = formFactory.form(SUser.class, SUser.Update.class).bindFromRequest();
         if (boundForm.hasErrors()) {
             flash("error", "Please correct the form below.");
-            return badRequest(views.html.userDetail.render(currentUser, boundForm, null));
+            return badRequest(views.html.userDetail.render(currentUser, boundForm, listRole, null));
         }
 
         SUser user = boundForm.get();
 
         if (!user.getPassword().equals(confirmPassword)) {
             flash("error", "Please correct the confirm password");
-            return badRequest(views.html.userDetail.render(currentUser, boundForm, null));
+            return badRequest(views.html.userDetail.render(currentUser, boundForm, listRole, null));
         }
 
         SUser updateUser = null;
+
         try {
             updateUser = repository.getUserByEmail(user.getEmail()).toCompletableFuture().get();
         } catch (Exception e) {
@@ -213,9 +225,28 @@ public class AppController extends Controller {
         updateUser.setGender(user.getGender());
 
         repository.update(updateUser);
+
+        String role = requestData.get("role");
+        if (role != null && !"".equals(role)) {
+            try {
+                roleRepository.deleteUserRoleByUserId(updateUser.getId()).toCompletableFuture().get();
+                SUserRole userRole = new SUserRole();
+                SUserRolePK pk = new SUserRolePK();
+                pk.setUserId(updateUser.getId());
+                pk.setRoleId(Integer.valueOf(role));
+                userRole.setId(pk);
+                roleRepository.add(userRole);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            roleRepository.deleteUserRoleByUserId(updateUser.getId());
+        }
+
         flash("success", String.format("Successfully update user %s", updateUser.getEmail()));
+
         Form<SUser> profileForm = formFactory.form(SUser.class);
-        return ok(views.html.userDetail.render(currentUser, profileForm.fill(updateUser), null));
+        return ok(views.html.userDetail.render(currentUser, profileForm.fill(updateUser), listRole, role));
     }
 
     public Result deleteUsers() {
