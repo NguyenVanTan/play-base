@@ -11,6 +11,8 @@ GET     /logout                          controllers.LoginController.logout()
 GET     /dashboard                       controllers.AppController.dashboard()
 POST    /dashboard                       controllers.AppController.dashboard_save()
 
+GET     /inbox                           controllers.AppController.inbox()
+
 GET     /profile                         controllers.AppController.profile()
 POST    /profile                         controllers.AppController.profile_save()
 

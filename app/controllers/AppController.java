@@ -1,5 +1,7 @@
 package controllers;
 
+import com.google.common.collect.Lists;
+import dao.JPARepository;
 import dao.Repository;
 import dao.RoleRepository;
 import models.*;
@@ -12,14 +14,9 @@ import play.filters.csrf.RequireCSRFCheck;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
-import scala.Int;
 
 import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -32,7 +29,6 @@ public class AppController extends Controller {
     private final Repository repository;
     private final RoleRepository roleRepository;
     private final FormFactory formFactory;
-    private SUser userLogin = null;
 
     @Inject
     public AppController(Repository repository, RoleRepository roleRepository, FormFactory formFactory){
@@ -48,20 +44,20 @@ public class AppController extends Controller {
      * <code>GET</code> request with a path of <code>/</code>.
      */
     public Result dashboard() {
-        DynamicForm requestData = formFactory.form().bindFromRequest();
-        String filterType = requestData.get("filter");
-        Logger.of("application").info("filterType: " + filterType);
-        Integer noticeType = CNotice.convertStatusFromString(filterType);
-
         try {
-            if(userLogin == null){
-                userLogin = repository.getUserByEmail(session("email")).toCompletableFuture().get();
-            }
+            DynamicForm requestData = formFactory.form().bindFromRequest();
 
-            Integer userId = userLogin.getId();
+            String filterType = requestData.get("filter");
+            Integer noticeType = Optional.of(NoticeStatus.valueOfName(filterType)).map(e -> e.getStatusId()).orElse(NoticeStatus.ALL.getStatusId());
+
+            Integer userId = Integer.parseInt(session("userId"));
             List<CNotice> noticeList = repository.getCreatedNotices(userId, noticeType).toCompletableFuture().get();
 
-            Logger.of("application").info("Notice size: " + noticeList.size());
+            Logger.of("application").info("Dashboard {" +
+                    "noticeType: " + noticeType +
+                    ", filterType: " + filterType +
+                    ", noticeSize: " + noticeList.size() + "}");
+
             List<SUser> userList = repository.getAllUser()
                     .toCompletableFuture()
                     .get()
@@ -69,36 +65,64 @@ public class AppController extends Controller {
                     .filter(e -> e.getId() != userId)
                     .collect(Collectors.toList());
 
-            return ok(views.html.dashboard.render(session().get("userType"), session().get("userName"), filterType, noticeList, userList, formFactory.form(CNotice.class)));
+            return ok(views.html.dashboard.render(filterType, noticeList, userList, formFactory.form(CNotice.class)));
         } catch (Exception e) {
             e.printStackTrace();
-            return notFound("User not found");
+            return notFound("An unexpected error");
         }
     }
 
     public Result dashboard_save() {
+        CNotice notice = null;
         DynamicForm requestData = formFactory.form().bindFromRequest();
-        String msg = requestData.get("noticeMessage");
-
-        Logger.of("application").info("Message: " + msg);
-
-        List<Integer> receiverIds = Arrays.asList(24,26,29,27);
-
-        CNotice notice = new CNotice();
-        notice.setNoticeMessage(msg);
-        notice.setStatus(NoticeStatus.SENT.getStatusId());
-        notice.setCreationTime(new Date(System.currentTimeMillis()));
-        notice.setCreatedBy(userLogin.getId());
-        notice.setReceiver(receiverIds.toString());
-
+        int saveType = Integer.parseInt(requestData.get("saveType"));
+        Logger.of("application").info("Perform dashboard_save action with type: " + saveType);
         try {
-            repository.saveNotice(notice, receiverIds).toCompletableFuture().get();
+            if(saveType == JPARepository.INSERT_TYPE){
+                notice = new CNotice();
+                notice.setNoticeMessage(requestData.get("noticeMessage"));
+                notice.setStatus(Integer.parseInt(requestData.get("noticeStatus")));
+                notice.setReceiver(requestData.get("receiverIds"));
+                notice.setCreatedBy(Integer.parseInt(session("userId")));
+                notice.setCreationTime(new Date(System.currentTimeMillis()));
+                if (notice.getNoticeMessage().isEmpty() || notice.getReceiver().isEmpty()) {
+                    flash("error", "Please enter notice content and receiver !");
+                    return redirect(routes.AppController.dashboard());
+                }
+            } else if(saveType == JPARepository.UPDATE_TYPE){
+                notice = repository.getNoticeById(Integer.parseInt(requestData.get("noticeId"))).toCompletableFuture().get();
+                notice.setNoticeMessage(requestData.get("noticeMessage"));
+                notice.setStatus(Integer.parseInt(requestData.get("noticeStatus")));
+                notice.setReceiver(requestData.get("receiverIds"));
+                notice.setUpdateTime(new Date(System.currentTimeMillis()));
+                if (notice.getNoticeMessage().isEmpty() || notice.getReceiver().isEmpty()) {
+                    flash("error", "Please enter notice content and receiver !");
+                    return redirect(routes.AppController.dashboard());
+                }
+            }  else if(saveType == JPARepository.DELETE_TYPE){
+                notice = new CNotice();
+                notice.setNoticeId(Integer.parseInt(requestData.get("noticeId")));
+            }
+
+            Logger.of("application").info(notice.toString());
+            List<Integer> receiverIdList = splitToList(notice.getReceiver(), ",");
+            repository.saveNotice(notice, receiverIdList, saveType).toCompletableFuture().get();
         } catch (Exception e) {
             e.printStackTrace();
-            return badRequest("Can not save notice");
+            return notFound("An unexpected error");
         }
 
-        return dashboard();
+        return redirect(routes.AppController.dashboard());
+    }
+
+    private List<Integer> splitToList(String content, String separator) {
+        if(content == null){
+            return Lists.newArrayList();
+        }
+        return Arrays.asList(content.split(separator))
+                .stream()
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
     }
 
     public Result profile() {
@@ -271,6 +295,16 @@ public class AppController extends Controller {
         }
 
         return redirect(routes.AppController.management_user());
+    }
+
+    public Result inbox(){
+        try {
+            List<CNotice> noticeList = repository.getNoticeReceived(Integer.parseInt(session("userId"))).toCompletableFuture().get();
+            return ok(views.html.inbox.render(noticeList));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return notFound("An unexpected error");
+        }
     }
 
     public Result newRole() {

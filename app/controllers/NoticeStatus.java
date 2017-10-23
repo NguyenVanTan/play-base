@@ -4,7 +4,12 @@ import java.util.Arrays;
 
 public enum NoticeStatus {
 
-    ALL(-1, "ALL"), SENT(1, "SENT"), DRAFT(2, "DRAFT"), READ(3, "READ"), UNREAD(4, "UNREAD");
+    UNDEFINED(-1, "UNDEFINED"),
+    ALL(1, "ALL"),
+    SENT(2, "SENT"),
+    DRAFT(3, "DRAFT"),
+    READ(4, "READ"),
+    UNREAD(5, "UNREAD");
 
     private int statusId = 0;
     private String statusName = "";
@@ -23,11 +28,11 @@ public enum NoticeStatus {
     }
 
     public static NoticeStatus valueOfName(String statusName){
-        return Arrays.stream(values()).filter(e -> e.getStatusName().equalsIgnoreCase(statusName)).findFirst().orElse(null);
+        return Arrays.stream(values()).filter(e -> e.getStatusName().equalsIgnoreCase(statusName)).findFirst().orElse(UNDEFINED);
     }
 
     public static NoticeStatus valueOfId(Integer id){
-        return Arrays.stream(values()).filter(e -> e.getStatusId() == id).findFirst().orElse(null);
+        return Arrays.stream(values()).filter(e -> e.getStatusId() == id).findFirst().orElse(UNDEFINED);
     }
 
     public static boolean isDraft(int statusId){

@@ -76,6 +76,7 @@ public class LoginController extends Controller {
 
         session().clear();
         session("email", email);
+        session("userId", String.valueOf(user.getId()));
         session("userType", String.valueOf(user.getType()));
         session("userName", user.getName());
 
