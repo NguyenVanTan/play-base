@@ -23,8 +23,10 @@ public interface Repository {
 
     CompletionStage<List<CNotice>> getCreatedNotices(Integer userId, Integer noticeType);
 
-    CompletionStage<List<CNotice>> getReceivedNotices(Integer userId);
+    CompletionStage<String> saveNotice(CNotice notice, List<Integer> receiverIds, int type);
 
-    CompletionStage<String> saveNotice(CNotice notice, List<Integer> receiverIds);
+    CompletionStage<CNotice> getNoticeById(Integer noticeId);
+
+    CompletionStage<List<CNotice>> getNoticeReceived(Integer userId);
 
 }

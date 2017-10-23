@@ -26,31 +26,65 @@ public class JPARepository implements Repository {
     private JPAApi jpaApi;
     private DatabaseExecutionContext executionContext;
 
+    public static final int INSERT_TYPE = 1;
+    public static final int UPDATE_TYPE = 2;
+    public static final int DELETE_TYPE = 3;
+
     @Inject
     public JPARepository(JPAApi api, DatabaseExecutionContext executionContext) {
         this.jpaApi = api;
         this.executionContext = executionContext;
     }
 
+    public CompletionStage<List<CNotice>> getNoticeReceived(Integer userId){
+        return supplyAsync(() -> wrap(em -> fetchNoticeReceived(em, userId)), executionContext);
+    }
+
+    private List<CNotice> fetchNoticeReceived(EntityManager em, Integer userId) {
+        String planTextQuery = String.format("select * from c_notices where notice_id in (select notice_id from c_user_notice where user_id = %d)", userId);
+        return em.createNativeQuery(planTextQuery, CNotice.class)
+                .getResultList();
+    }
+
+    public CompletionStage<CNotice> getNoticeById(Integer noticeId){
+        return supplyAsync(() -> wrap(em -> fetchNoticeById(em, noticeId)), executionContext);
+    };
+
+    private CNotice fetchNoticeById(EntityManager em, Integer noticeId) {
+        return em.createNamedQuery("CNotice.findNoticeById", CNotice.class)
+                .setParameter(0, noticeId)
+                .getSingleResult();
+    }
+
     public CompletionStage<List<CNotice>> getCreatedNotices(Integer userId, Integer noticeType){
         return supplyAsync(() -> wrap(em -> fetchCreatedNoticeByUser(em, userId, noticeType)), executionContext);
+
     }
 
-    public CompletionStage<List<CNotice>> getReceivedNotices(Integer userId){
-        return null;
-    }
-
-    private List<CNotice> fetchCreatedNoticeByUser(EntityManager em, Integer userId, Integer noticeType){
-        if(noticeType == -1){//ALL
-            return em.createQuery("select p from CNotice p where p.createdBy = ? order by p.creationTime DESC", CNotice.class)
+    private List<CNotice> fetchCreatedNoticeByUser(EntityManager em, Integer userId, Integer noticeType) {
+        List<CNotice> notices = null;
+        if (NoticeStatus.ALL.getStatusId() == noticeType ||
+                NoticeStatus.UNDEFINED.getStatusId() == noticeType) {
+            notices = em.createNamedQuery("CNotice.findAllCreatedNotice", CNotice.class)
+                    .setParameter("createdById", userId)
+                    .getResultList();
+        } else {
+            notices = em.createNamedQuery("CNotice.findCreatedNoticeByStatus", CNotice.class)
                     .setParameter(0, userId)
+                    .setParameter(1, noticeType)
                     .getResultList();
         }
 
-       return em.createQuery("select p from CNotice p where p.createdBy = ? and p.status = ? order by p.creationTime DESC", CNotice.class)
-               .setParameter(0, userId)
-               .setParameter(1, noticeType)
-               .getResultList();
+        if (notices != null) {
+            notices.forEach(e -> {
+                String sqlQuery = String.format("SELECT GROUP_CONCAT(user_id SEPARATOR ',') from play_core.c_user_notice where notice_id = %d group by notice_id", e.getNoticeId());
+                String receiver = em.createNativeQuery(sqlQuery)
+                        .getSingleResult().toString();
+                e.setReceiver(receiver);
+            });
+        }
+
+        return notices;
     }
 
     @Override
@@ -97,13 +131,26 @@ public class JPARepository implements Repository {
         return em.merge(user);
     }
 
-    public CompletionStage<String> saveNotice(CNotice notice, List<Integer> receiverIds){
-       return supplyAsync(() -> wrap(em -> saveNotice(em, notice, receiverIds)), executionContext);
+    public CompletionStage<String> saveNotice(CNotice notice, List<Integer> receiverIds, int type){
+       return supplyAsync(() -> wrap(em -> saveNotice(em, notice, receiverIds, type)), executionContext);
     }
 
-    private String saveNotice(EntityManager em, CNotice notice, List<Integer> receiverIds){
-        em.persist(notice);
-        insertNoticeUser(em, notice.getNoticeId(), receiverIds);
+    private String saveNotice(EntityManager em, CNotice notice, List<Integer> receiverIds, int type) {
+        switch (type) {
+            case INSERT_TYPE:
+                em.persist(notice);
+                insertNoticeUser(em, notice.getNoticeId(), receiverIds);
+                break;
+            case UPDATE_TYPE:
+                em.merge(notice);
+                deleteNoticeUser(em, notice.getNoticeId());
+                insertNoticeUser(em, notice.getNoticeId(), receiverIds);
+                break;
+            case DELETE_TYPE:
+                deleteNoticeUser(em, notice.getNoticeId());
+                deleteNotice(em, notice.getNoticeId());
+                break;
+        }
         return "OK";
     }
 
@@ -124,10 +171,15 @@ public class JPARepository implements Repository {
     }
 
     private void deleteNoticeUser(EntityManager em, int noticeId){
-        Logger.of("application").debug("Delete data into CUserNotice table for notice_id " + noticeId);
-        em.createQuery("delete from CUserNotice where noticeId = ?")
-                .setParameter(0, noticeId)
-                .executeUpdate();
+        String deleteQuery = String.format("delete from c_user_notice where notice_id = %d", noticeId);
+        Logger.of("application").debug(deleteQuery);
+        em.createNativeQuery(deleteQuery).executeUpdate();
+    }
+
+    private void deleteNotice(EntityManager em, int noticeId){
+        String deleteQuery = String.format("delete from c_notices where notice_id = %d", noticeId);
+        Logger.of("application").debug(deleteQuery);
+        em.createNativeQuery(deleteQuery).executeUpdate();
     }
 
 }

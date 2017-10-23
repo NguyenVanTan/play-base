@@ -1,0 +1,39 @@
+@(noticeList: List[CNotice])
+
+@mainframe("Inbox", session().get("userType"), session().get("userName")) {
+    <div><br><a href="dashboard"> *** MANAGEMENT NOTICE *** </a></div>
+    <hr>
+    <table>
+        <tr><td colspan="2"><h2>All Notices Received</h2></td></tr>
+        @if(noticeList != null && noticeList.size() > 0) {
+            <tr>
+                <td>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Index</th>
+                                <th>Message</th>
+                                <th>Sender</th>
+                                <th>Creation_Time</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @for((notice, index) <- noticeList.zipWithIndex) {
+                            <tr>
+                                <td width="35px">@{
+                                    index + 1
+                                }</td>
+                                <td><span>@notice.getNoticeMessage()</span></td>
+                                <td><span>@notice.getCreatedBy()</span></td>
+                                <td width="100px"><span>@notice.getCreationTime()</span></td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        } else {
+            <tr><td colspan="2"><h4>No message to display ...</h4></td></tr>
+        }
+    </table>
+}
