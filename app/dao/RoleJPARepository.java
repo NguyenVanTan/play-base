@@ -1,6 +1,7 @@
 package dao;
 
 import models.SRole;
+import models.SUserRole;
 import play.db.jpa.JPAApi;
 
 import javax.inject.Inject;
@@ -50,6 +51,21 @@ public class RoleJPARepository implements RoleRepository {
         return supplyAsync(() -> wrap(em -> deleteRoleByIds(em, roleIds)), executionContext);
     }
 
+    @Override
+    public CompletionStage<Integer> deleteUserRoleByUserId(int userId) {
+        return supplyAsync(() -> wrap(em -> deleteUserRoleByUserId(em, userId)), executionContext);
+    }
+
+    @Override
+    public CompletionStage<SUserRole> add(SUserRole userRole) {
+        return supplyAsync(() -> wrap(em -> insert(em, userRole)), executionContext);
+    }
+
+    @Override
+    public CompletionStage<SUserRole> getUserRoleByUserId(int userId) {
+        return supplyAsync(() -> wrap(em -> getUserRoleByUserId(em, userId)), executionContext);
+    }
+
     private SRole insert(EntityManager em, SRole role) {
         em.persist(role);
         return role;
@@ -74,5 +90,22 @@ public class RoleJPARepository implements RoleRepository {
     private int deleteRoleByIds(EntityManager em, String roleIds){
         return em.createNativeQuery("delete from s_roles where role_id in " + roleIds)
                 .executeUpdate();
+    }
+
+    private int deleteUserRoleByUserId(EntityManager em, int userId){
+        return em.createNativeQuery("delete from s_user_roles where user_id = :userId")
+                .setParameter("userId", userId)
+                .executeUpdate();
+    }
+
+    private SUserRole insert(EntityManager em, SUserRole userRole) {
+        em.persist(userRole);
+        return userRole;
+    }
+
+    private SUserRole getUserRoleByUserId(EntityManager em, int userId){
+        return em.createQuery("select p from SUserRole p where p.id.userId = ?", SUserRole.class)
+                .setParameter(0, userId)
+                .getSingleResult();
     }
 }

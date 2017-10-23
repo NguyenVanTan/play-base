@@ -1,0 +1,79 @@
+@(user: SUser, registerForm: Form[SUser], roles: List[SRole], seletedRole: String)
+@import helper._
+
+@mainframe("User detail", String.valueOf(user.getType()), user.getName()) {
+    @helper.form(routes.AppController.user_save()) {
+        @CSRF.formField
+        <div>
+            <div><h2>User detail</h2></div>
+            <div><a href='@routes.AppController.management_user()'>Back</a></div>
+            @if(flash.containsKey("error")) {
+                <div><span style="color: red">@flash.get("error")</span></div>
+            }
+            @if(flash.containsKey("success")) {
+                <div><span style="color: red">@flash.get("success")</span></div>
+            }
+
+            <div class="forms">
+                <table>
+                    <tr>
+                        <td><span>Full Name:</span></td>
+                        <td>@helper.inputText(registerForm("name"), '_label -> "", 'size -> "30", '_showConstraints -> false)</td>
+                    </tr>
+                    <tr>
+                        <td><span>Email:</span></td>
+                        <td><span>@registerForm("email").value</span>
+                            <input type="hidden" name="email" value="@registerForm("email").value" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span>New Password:</span></td>
+                        <td>@helper.inputPassword(registerForm("password"), '_label -> "", 'size -> "30", '_showConstraints -> false)</td>
+                    </tr>
+                    <tr>
+                        <td><span>Confirm New Password:</span></td>
+                        <td><input id="confirmPassword" name="confirmPassword" type="password" size = "30" /></td>
+                    </tr>
+                    <tr>
+                        <td><span>Phone Number:</span></td>
+                        <td>@helper.inputText(registerForm("mobile"), '_label -> "", 'size -> "30", '_showConstraints -> false)</td>
+                    </tr>
+                    <tr>
+                        <td><span>Gender:</span></td>
+                        <td height="40px">
+                        @select(
+                            field = registerForm("gender"),
+                            options = Seq(
+                                "1" -> "Male",
+                                "2" -> "Female"
+                            ),
+                            '_label -> "",
+                            '_default -> "Choose One"
+                        )
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span>Role:</span></td>
+                        <td height="40px">
+                            <select id="role" name="role">
+                                <option value="">Select role</option>
+                                @for(role <- roles) {
+                                    <option value="@role.getRoleId()">@role.getRoleName()</option>
+                                }
+                            </select>
+                            <input type="hidden" id="selectedRole" value="@seletedRole">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="center">
+                            <input id="submit" type="submit" value = "Save" />
+                            <input id="reset" type="reset" value = "Cancel" />
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="footer">Copyright by Framgia</div>
+    }
+}
+<script src="@routes.Assets.versioned("javascripts/userManagement.js")" type="text/javascript"></script>

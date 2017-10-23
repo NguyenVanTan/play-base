@@ -118,6 +118,11 @@ public class JPARepository implements Repository {
         return supplyAsync(() -> wrap(em -> update(em, user)), executionContext);
     }
 
+    @Override
+    public CompletionStage<Integer> deleteUserByIds(String userIds) {
+        return supplyAsync(() -> wrap(em -> deleteUserByIds(em, userIds)), executionContext);
+    }
+
     private <T> T wrap(Function<EntityManager, T> function) {
         return jpaApi.withTransaction(function);
     }
@@ -180,6 +185,11 @@ public class JPARepository implements Repository {
         String deleteQuery = String.format("delete from c_notices where notice_id = %d", noticeId);
         Logger.of("application").debug(deleteQuery);
         em.createNativeQuery(deleteQuery).executeUpdate();
+    }
+
+    private int deleteUserByIds(EntityManager em, String userIds){
+        return em.createNativeQuery("delete from s_user where id in " + userIds)
+                .executeUpdate();
     }
 
 }

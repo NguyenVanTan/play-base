@@ -4,9 +4,7 @@ import com.google.common.collect.Lists;
 import dao.JPARepository;
 import dao.Repository;
 import dao.RoleRepository;
-import models.CNotice;
-import models.SRole;
-import models.SUser;
+import models.*;
 import org.mindrot.jbcrypt.BCrypt;
 import play.Logger;
 import play.data.DynamicForm;
@@ -19,7 +17,10 @@ import play.mvc.Security;
 import scala.Int;
 
 import javax.inject.Inject;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -77,7 +78,6 @@ public class AppController extends Controller {
     }
 
     public Result dashboard_save() {
-        CNotice notice = null;
         DynamicForm requestData = formFactory.form().bindFromRequest();
         int saveType = Integer.parseInt(requestData.get("saveType"));
         Logger.of("application").info("Perform dashboard_save action with type: " + saveType);
@@ -188,8 +188,117 @@ public class AppController extends Controller {
         }
     }
 
-    public Result remove_user(Int userId) {
-        return ok("OK");
+    public Result userDetail(String email) {
+        try {
+            SUser user = repository.getUserByEmail(email).toCompletableFuture().get();
+
+            List<SRole> listRole = roleRepository.getAllRole().toCompletableFuture().get();
+
+            String selectedRole = "";
+            try {
+                SUserRole userRole = roleRepository.getUserRoleByUserId(user.getId()).toCompletableFuture().get();
+                selectedRole = userRole == null ? "" : String.valueOf(userRole.getId().getRoleId());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            Form<SUser> profileForm = formFactory.form(SUser.class);
+            return ok(views.html.userDetail.render(user, profileForm.fill(user), listRole, selectedRole));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return notFound("User not found");
+        }
+    }
+
+    @RequireCSRFCheck
+    public Result user_save() {
+        SUser currentUser = null;
+        List<SRole> listRole;
+        try {
+            currentUser = repository.getUserByEmail(session("email")).toCompletableFuture().get();
+            listRole = roleRepository.getAllRole().toCompletableFuture().get();
+        } catch (Exception e) {
+            return notFound("User not found");
+        }
+
+        DynamicForm requestData = formFactory.form().bindFromRequest();
+        String confirmPassword = requestData.get("confirmPassword");
+
+        Form<SUser> boundForm = formFactory.form(SUser.class, SUser.Update.class).bindFromRequest();
+        if (boundForm.hasErrors()) {
+            flash("error", "Please correct the form below.");
+            return badRequest(views.html.userDetail.render(currentUser, boundForm, listRole, null));
+        }
+
+        SUser user = boundForm.get();
+
+        if (!user.getPassword().equals(confirmPassword)) {
+            flash("error", "Please correct the confirm password");
+            return badRequest(views.html.userDetail.render(currentUser, boundForm, listRole, null));
+        }
+
+        SUser updateUser = null;
+
+        try {
+            updateUser = repository.getUserByEmail(user.getEmail()).toCompletableFuture().get();
+        } catch (Exception e) {
+            return notFound("User not found");
+        }
+
+        updateUser.setName(user.getName());
+        if (user.getPassword() != null && !user.getPassword().equals("")) {
+            updateUser.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
+        }
+        updateUser.setMobile(user.getMobile());
+        updateUser.setGender(user.getGender());
+
+        repository.update(updateUser);
+
+        String role = requestData.get("role");
+        if (role != null && !"".equals(role)) {
+            try {
+                roleRepository.deleteUserRoleByUserId(updateUser.getId()).toCompletableFuture().get();
+                SUserRole userRole = new SUserRole();
+                SUserRolePK pk = new SUserRolePK();
+                pk.setUserId(updateUser.getId());
+                pk.setRoleId(Integer.valueOf(role));
+                userRole.setId(pk);
+                roleRepository.add(userRole);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            roleRepository.deleteUserRoleByUserId(updateUser.getId());
+        }
+
+        flash("success", String.format("Successfully update user %s", updateUser.getEmail()));
+
+        Form<SUser> profileForm = formFactory.form(SUser.class);
+        return ok(views.html.userDetail.render(currentUser, profileForm.fill(updateUser), listRole, role));
+    }
+
+    public Result deleteUsers() {
+        Map<String, String[]> map = request().body().asFormUrlEncoded();
+        String[] checkedVal = map.get("checked");
+
+        if (checkedVal == null) {
+            flash("error", "Please check user for delete!");
+            return redirect(routes.AppController.management_user());
+        }
+
+        String ids = "(";
+        ids += String.join(",", checkedVal);
+        ids += ")";
+
+        int deletedRecordCount = 0;
+        try {
+            deletedRecordCount = repository.deleteUserByIds(ids).toCompletableFuture().get();
+            flash("success", "Successful delete!");
+        } catch (Exception e) {
+            flash("error", "Cannot delete!");
+        }
+
+        return redirect(routes.AppController.management_user());
     }
 
     public Result inbox(){
@@ -259,11 +368,19 @@ public class AppController extends Controller {
         if (checkRole != null) {
             checkRole.setRoleName(role.getRoleName());
             checkRole.setRoleDesc(role.getRoleDesc());
-            roleRepository.update(role);
+            try {
+                roleRepository.update(role).toCompletableFuture().get();
+            } catch (Exception e) {
+                flash("error", String.format("Error update role %s", role.getRoleName()));
+            }
             flash("success", String.format("Successfully update role %s", role.getRoleName()));
             return ok(views.html.roleDetail.render(currentUser, boundForm));
         } else {
-            roleRepository.add(role);
+            try {
+                roleRepository.add(role).toCompletableFuture().get();
+            } catch (Exception e) {
+                flash("error", String.format("Error add role %s", role.getRoleName()));
+            }
             flash("success", String.format("Successfully add role %s", role.getRoleName()));
             return redirect(routes.AppController.management_role());
         }
@@ -289,13 +406,7 @@ public class AppController extends Controller {
         }
 
         String result = "(";
-        for (String s : checkedVal) {
-            result += s;
-            result += ",";
-        }
-        if (result.endsWith(",")) {
-            result = result.substring(0, result.length() - 1);
-        }
+        result += String.join(",", checkedVal);
         result += ")";
 
         int deletedRecordCount = 0;

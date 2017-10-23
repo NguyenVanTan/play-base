@@ -1,60 +1,66 @@
-
 @(userList: List[SUser], userType: String, userName: String)
+@import helper._
 
 @mainframe("User management", userType, userName) {
-    <script>
-            function del(urlToDelete) {
-                $.ajax({
-                    url: urlToDelete,
-                    type: 'DELETE',
-                    success: function (results) {
-                        // Refresh the page
-                        location.reload();
+    @helper.form(action = routes.AppController.deleteUsers(), 'id -> "deleteForm") {
+        @CSRF.formField
+        <table class="table table-striped">
+            <thead>
+                <tr><td colspan="8"><h2>All Users</h2></td></tr>
+                <tr>
+                    <td colspan="8">
+                        @if(flash.containsKey("error")) {
+                            <div><span style="color: red">@flash.get("error")</span></div>
+                        }
+                        @if(flash.containsKey("success")) {
+                            <div><span style="color: red">@flash.get("success")</span></div>
+                        }
+                    </td>
+                </tr>
+                <tr><td colspan="8"><input id="delete" type="submit" value = "Delete" /></td></tr>
+                <tr>
+                    <th><input type="checkbox" name="checkAll" id="checkAll"></th>
+                    <th>STT</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Mobile</th>
+                    <th>Gender</th>
+                    <th>Role</th>
+                    <th>Created Time</th>
+                    <th>Created By</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            @for((user, index) <- userList.zipWithIndex) {
+                <tr>
+                    <th><input type="checkbox" class="checkbox" name="checked" value="@user.getId()"></th>
+                    <th width="35px">@{
+                        index + 1
+                    }</th>
+                    <td><span><a href='@routes.AppController.userDetail(user.getEmail())'>@user.getName()</a></span></td>
+                    <td><span><a href='@routes.AppController.userDetail(user.getEmail())'>@user.getEmail()</a></span></td>
+                    <td><span>@user.getMobile()</span></td>
+                    <td>
+                    @if(user.getGender() == 1) {
+                        <span>Nam</span>
+                    } else {
+                        <span>Nữ</span>
                     }
-                });
+                    </td>
+                    <td>
+                    @if(user.getType() == 1) {
+                        <span>Admin</span>
+                    } else {
+                        <span>Other</span>
+                    }
+                    </td>
+                    <td><span>@user.getCreationDate()</span></td>
+                    <td><span>@user.getCreationBy()</span></td>
+                </tr>
             }
-    </script>
-    <table class="table table-striped">
-        <thead>
-            <tr><td colspan="8"><h2>All Users</h2></td></tr>
-            <tr>
-                <th>STT</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Mobile</th>
-                <th>Gender</th>
-                <th>Role</th>
-                <th>Created Time</th>
-                <th>Created By</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-        @for((user, index) <- userList.zipWithIndex) {
-            <tr>
-                <th width="35px">@{index + 1}</th>
-                <td><span><a onclick="javascript:alert("chao ban")">@user.getName()</a></span></td>
-                <td><span><a onclick="javascript:alert("chao ban")">@user.getEmail()</a></span></td>
-                <td><span><a onclick="javascript:alert("chao ban")">@user.getMobile()</a></span></td>
-                <td>
-                @if(user.getGender() == 1){
-                    <span>Nam</span>
-                } else {
-                    <span>Nữ</span>
-                }
-                </td>
-                <td>
-                @if(user.getType() == 1){
-                    <span>Admin</span>
-                } else {
-                    <span>Other</span>
-                }
-                </td>
-                <td><span>@user.getCreationDate()</span></td>
-                <td><span>@user.getCreationBy()</span></td>
-                <td><a href="#" onclick="javascript:del('@routes.AppController.remove_user(user.getId())'">Remove</a></td>
-            </tr>
-        }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    }
 }
+<script src="@routes.Assets.versioned("javascripts/userManagement.js")" type="text/javascript"></script>
