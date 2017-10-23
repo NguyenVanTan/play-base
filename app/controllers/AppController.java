@@ -14,13 +14,9 @@ import play.filters.csrf.RequireCSRFCheck;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
-import scala.Int;
 
 import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -33,7 +29,6 @@ public class AppController extends Controller {
     private final Repository repository;
     private final RoleRepository roleRepository;
     private final FormFactory formFactory;
-    private SUser userLogin = null;
 
     @Inject
     public AppController(Repository repository, RoleRepository roleRepository, FormFactory formFactory){
@@ -78,6 +73,7 @@ public class AppController extends Controller {
     }
 
     public Result dashboard_save() {
+        CNotice notice = null;
         DynamicForm requestData = formFactory.form().bindFromRequest();
         int saveType = Integer.parseInt(requestData.get("saveType"));
         Logger.of("application").info("Perform dashboard_save action with type: " + saveType);
