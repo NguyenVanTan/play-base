@@ -109,13 +109,13 @@ public class JPARepository implements Repository {
     }
 
     @Override
-    public CompletionStage<SUser> add(SUser user) {
-        return supplyAsync(() -> wrap(em -> insert(em, user)), executionContext);
+    public CompletionStage<SUser> addUser(SUser user) {
+        return supplyAsync(() -> wrap(em -> saveUser(em, user, INSERT_TYPE)), executionContext);
     }
 
     @Override
-    public CompletionStage<SUser> update(SUser user) {
-        return supplyAsync(() -> wrap(em -> update(em, user)), executionContext);
+    public CompletionStage<SUser> updateUser(SUser user) {
+        return supplyAsync(() -> wrap(em -> saveUser(em, user, UPDATE_TYPE)), executionContext);
     }
 
     @Override
@@ -127,13 +127,14 @@ public class JPARepository implements Repository {
         return jpaApi.withTransaction(function);
     }
 
-    private SUser insert(EntityManager em, SUser user) {
-        em.persist(user);
-        return user;
-    }
-
-    private SUser update(EntityManager em, SUser user) {
-        return em.merge(user);
+    private SUser saveUser(EntityManager em, SUser user, int type) {
+        if (type == INSERT_TYPE) {
+            em.persist(user);
+            return user;
+        } else if (type == UPDATE_TYPE) {
+            return em.merge(user);
+        }
+        return null;
     }
 
     public CompletionStage<String> saveNotice(CNotice notice, List<Integer> receiverIds, int type){
@@ -188,7 +189,7 @@ public class JPARepository implements Repository {
     }
 
     private int deleteUserByIds(EntityManager em, String userIds){
-        return em.createNativeQuery("delete from s_user where id in " + userIds)
+        return em.createNativeQuery(String.format("delete from s_user where id in (%s)", userIds))
                 .executeUpdate();
     }
 

@@ -5,6 +5,7 @@ import models.Login;
 import models.SUser;
 import org.mindrot.jbcrypt.BCrypt;
 import play.Logger;
+import play.data.DynamicForm;
 import play.data.Form;
 import play.data.FormFactory;
 import play.filters.csrf.RequireCSRFCheck;
@@ -12,6 +13,7 @@ import play.mvc.Controller;
 import play.mvc.Result;
 
 import javax.inject.Inject;
+import java.util.Calendar;
 
 /**
  * This controller contains an action to handle HTTP requests
@@ -20,12 +22,17 @@ import javax.inject.Inject;
 public class LoginController extends Controller {
 
     private final Repository repository;
-    private final Form<Login> loginForm;
+    private Form<Login> loginForm;
+    private FormFactory formFactory;
+    private Form<SUser> registerForm;
 
     @Inject
     public LoginController(Repository repository, FormFactory formFactory) {
         this.repository = repository;
-        loginForm = formFactory.form(Login.class);
+        this.loginForm = formFactory.form(Login.class);
+
+        this.formFactory = formFactory;
+        this.registerForm = formFactory.form(SUser.class, SUser.Register.class);
     }
 
     /**
@@ -81,6 +88,38 @@ public class LoginController extends Controller {
         session("userName", user.getName());
 
         return redirect(routes.AppController.dashboard());
+    }
+
+    public Result newRegister() {
+        return ok(views.html.register.render(registerForm));
+    }
+
+    @RequireCSRFCheck
+    public Result register() {
+        DynamicForm requestData = formFactory.form().bindFromRequest();
+        String confirmPassword = requestData.get("confirmPassword");
+
+        Form<SUser> boundForm = registerForm.bindFromRequest();
+        if (boundForm.hasErrors()) {
+            flash("error", "Please correct the form below.");
+            return badRequest(views.html.register.render(boundForm));
+        }
+
+        SUser user = boundForm.get();
+
+        if (!user.getPassword().equals(confirmPassword)) {
+            flash("error", "Please correct the confirm password");
+            return badRequest(views.html.register.render(boundForm));
+        }
+
+        user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
+        user.setCreationDate(Calendar.getInstance().getTime());
+        user.setCreationBy("Manual Registration");
+        user.setType(2);
+
+        repository.addUser(user);
+        flash("success", String.format("Successfully register user %s", user.getEmail()));
+        return redirect(routes.LoginController.login());
     }
 
 }

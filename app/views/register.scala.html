@@ -3,7 +3,7 @@
 
 @main("Register") {
 
-@helper.form(CSRF(routes.UserController.register())) {
+@helper.form(CSRF(routes.LoginController.register())) {
 	<div id="signup_wrapper">
 		<div class="join">Sign up</div>
 		<div class="lock"></div>

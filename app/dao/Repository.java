@@ -13,9 +13,9 @@ import java.util.concurrent.CompletionStage;
 @ImplementedBy(JPARepository.class)
 public interface Repository {
 
-    CompletionStage<SUser> add(SUser user);
+    CompletionStage<SUser> addUser(SUser user);
 
-    CompletionStage<SUser> update(SUser user);
+    CompletionStage<SUser> updateUser(SUser user);
 
     CompletionStage<List<SUser>> getAllUser();
 

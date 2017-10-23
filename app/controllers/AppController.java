@@ -168,7 +168,7 @@ public class AppController extends Controller {
         currentUser.setMobile(user.getMobile());
         currentUser.setGender(user.getGender());
 
-        repository.update(currentUser);
+        repository.updateUser(currentUser);
         flash("success", String.format("Successfully update user %s", user.getEmail()));
         Form<SUser> profileForm = formFactory.form(SUser.class);
         return ok(views.html.profile.render(currentUser, profileForm.fill(currentUser)));
@@ -248,7 +248,7 @@ public class AppController extends Controller {
         updateUser.setMobile(user.getMobile());
         updateUser.setGender(user.getGender());
 
-        repository.update(updateUser);
+        repository.updateUser(updateUser);
 
         String role = requestData.get("role");
         if (role != null && !"".equals(role)) {
@@ -282,13 +282,8 @@ public class AppController extends Controller {
             return redirect(routes.AppController.management_user());
         }
 
-        String ids = "(";
-        ids += String.join(",", checkedVal);
-        ids += ")";
-
-        int deletedRecordCount = 0;
         try {
-            deletedRecordCount = repository.deleteUserByIds(ids).toCompletableFuture().get();
+            repository.deleteUserByIds(String.join(",", checkedVal)).toCompletableFuture().get();
             flash("success", "Successful delete!");
         } catch (Exception e) {
             flash("error", "Cannot delete!");
@@ -401,13 +396,8 @@ public class AppController extends Controller {
             return redirect(routes.AppController.management_role());
         }
 
-        String result = "(";
-        result += String.join(",", checkedVal);
-        result += ")";
-
-        int deletedRecordCount = 0;
         try {
-            deletedRecordCount = roleRepository.deleteRoleByIds(result).toCompletableFuture().get();
+            roleRepository.deleteRoleByIds( String.join(",", checkedVal)).toCompletableFuture().get();
             flash("success", "Successful delete!");
         } catch (Exception e) {
             flash("error", "Cannot delete!");

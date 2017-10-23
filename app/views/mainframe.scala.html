@@ -65,11 +65,11 @@
                             <a href="profile" class="waves-effect"><i class="fa fa-user fa-fw" aria-hidden="true"></i>
                                 <span class="hide-menu">Profile</span></a>
                         </li>
-                        <li>
-                            <a href="roles" class="waves-effect"><i class="fa fa-user fa-fw" aria-hidden="true"></i>
-                                <span class="hide-menu">Roles</span></a>
-                        </li>
-                        @if(userType == "1"){
+                        @if(RoleType.isAdmin(Integer.parseInt(userType))) {
+                            <li>
+                                <a href="roles" class="waves-effect"><i class="fa fa-user fa-fw" aria-hidden="true"></i>
+                                    <span class="hide-menu">Roles</span></a>
+                            </li>
                             <li>
                                 <a href="management-user" class="waves-effect"><i class="fa fa-table fa-fw" aria-hidden="true"></i>
                                     <span class="hide-menu">User Management</span></a>

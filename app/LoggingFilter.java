@@ -37,9 +37,12 @@ public class LoggingFilter extends Filter {
 
             String role = "";
             try {
-                SUser user = repository.getUserByEmail(session.get("email")).toCompletableFuture().get();
-                int roleId = roleRepository.getUserRoleByUserId(user.getId()).toCompletableFuture().get().getId().getRoleId();
-                role = roleRepository.getRoleById(roleId).toCompletableFuture().get().getRoleName();
+                String email = session.get("email");
+                if(email != null && email.length() > 0){
+                    SUser user = repository.getUserByEmail(email).toCompletableFuture().get();
+                    int roleId = roleRepository.getUserRoleByUserId(user.getId()).toCompletableFuture().get().getId().getRoleId();
+                    role = roleRepository.getRoleById(roleId).toCompletableFuture().get().getRoleName();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }

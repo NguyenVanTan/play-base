@@ -88,7 +88,7 @@ public class RoleJPARepository implements RoleRepository {
     }
 
     private int deleteRoleByIds(EntityManager em, String roleIds){
-        return em.createNativeQuery("delete from s_roles where role_id in " + roleIds)
+        return em.createNativeQuery(String.format("delete from s_roles where role_id in (%s)", roleIds))
                 .executeUpdate();
     }
 
