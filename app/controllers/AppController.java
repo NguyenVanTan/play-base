@@ -1,5 +1,6 @@
 package controllers;
 
+import au.com.bytecode.opencsv.CSVReader;
 import com.google.common.collect.Lists;
 import dao.JPARepository;
 import dao.Repository;
@@ -12,10 +13,14 @@ import play.data.Form;
 import play.data.FormFactory;
 import play.filters.csrf.RequireCSRFCheck;
 import play.mvc.Controller;
+import play.mvc.Http;
 import play.mvc.Result;
 import play.mvc.Security;
+import services.MailerService;
 
 import javax.inject.Inject;
+import java.io.File;
+import java.io.FileReader;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -29,12 +34,14 @@ public class AppController extends Controller {
     private final Repository repository;
     private final RoleRepository roleRepository;
     private final FormFactory formFactory;
+    private final MailerService mailerService;
 
     @Inject
-    public AppController(Repository repository, RoleRepository roleRepository, FormFactory formFactory){
+    public AppController(Repository repository, RoleRepository roleRepository, FormFactory formFactory, MailerService mailerService){
         this.repository = repository;
         this.roleRepository = roleRepository;
         this.formFactory = formFactory;
+        this.mailerService = mailerService;
     }
 
     /**
@@ -404,5 +411,54 @@ public class AppController extends Controller {
         }
 
         return redirect(routes.AppController.management_role());
+    }
+
+    public Result initUploadListRole() {
+        SUser currentUser = null;
+        try {
+            currentUser = repository.getUserByEmail(session("email")).toCompletableFuture().get();
+        } catch (Exception e) {
+            return notFound("User not found");
+        }
+        return ok(views.html.uploadListRole.render(currentUser));
+    }
+
+    @RequireCSRFCheck
+    public Result uploadListRole() {
+        Http.MultipartFormData<File> body = request().body().asMultipartFormData();
+        Http.MultipartFormData.FilePart<File> uploadFile = body.getFile("uploadFile");
+        if (uploadFile != null) {
+            String fileName = uploadFile.getFilename();
+            String contentType = uploadFile.getContentType();
+            File file = uploadFile.getFile();
+            Logger.of("application").info("Uploaded file:" + fileName + " with content type: " + contentType) ;
+
+            if (!fileName.endsWith(".csv")) {
+                flash("error", "Please choose .csv file");
+                return redirect(routes.AppController.initUploadListRole());
+            }
+
+            try {
+                CSVReader csvReader = new CSVReader(new FileReader(file));
+                String[] line;
+                while ((line = csvReader.readNext()) != null) {
+                    Logger.of("application").info("Role [name= " + line[0] + ", desc= " + line[1] + "]");
+                    SRole role = new SRole();
+                    role.setRoleName(line[0]);
+                    role.setRoleDesc(line[1]);
+                    roleRepository.add(role);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            mailerService.sendEmail(fileName, file);
+
+            flash("success", "Successfully upload list role");
+            return redirect(routes.AppController.initUploadListRole());
+        } else {
+            flash("error", "Missing file");
+            return redirect(routes.AppController.initUploadListRole());
+        }
     }
 }

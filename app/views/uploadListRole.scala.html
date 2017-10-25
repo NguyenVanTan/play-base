@@ -1,0 +1,33 @@
+@(user: SUser)
+@import helper._
+
+@mainframe("Upload list role", String.valueOf(user.getType()), user.getName()) {
+    @helper.form(routes.AppController.uploadListRole(), 'enctype -> "multipart/form-data") {
+        @CSRF.formField
+        <div>
+            <div><h2>Upload list user</h2></div>
+            @if(flash.containsKey("error")) {
+                <div><span style="color: red">@flash.get("error")</span></div>
+            }
+            @if(flash.containsKey("success")) {
+                <div><span style="color: red">@flash.get("success")</span></div>
+            }
+
+            <div class="forms">
+                <table>
+                    <tr>
+                        <td><span>User list file:</span></td>
+                        <td><input type="file" name="uploadFile" id="uploadFile"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" align="center">
+                            <input id="submit" type="submit" value = "Save" />
+                            <input id="reset" type="reset" value = "Cancel" />
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="footer">Copyright by Framgia</div>
+    }
+}

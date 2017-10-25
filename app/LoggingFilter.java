@@ -44,7 +44,7 @@ public class LoggingFilter extends Filter {
                     role = roleRepository.getRoleById(roleId).toCompletableFuture().get().getRoleName();
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
 
             return result.withHeader("XXXRequest-Time", session.get("email") + " XXX " + requestTime)

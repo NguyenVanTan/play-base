@@ -24,6 +24,8 @@ GET     /users/detail/:email             controllers.AppController.userDetail(em
 POST    /users/detail/save               controllers.AppController.user_save()
 POST    /users/delete                    controllers.AppController.deleteUsers()
 
+GET     /roles/upload                    controllers.AppController.initUploadListRole()
+POST    /roles/upload                    controllers.AppController.uploadListRole()
 GET     /roles/new                       controllers.AppController.newRole()
 GET     /roles/:roleId                   controllers.AppController.roleDetail(roleId: Int)
 POST    /roles                           controllers.AppController.saveRole()
